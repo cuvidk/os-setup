@@ -30,7 +30,25 @@ setup_password() {
     passwd >$(tty) 2>&1
 }
 
+install_package() {
+    package_name=$1
+    pacman -S --noconfirm "$package_name"
+}
+
 ################################################################################
+
+PACKAGES="vim \
+          man-db \
+          man-pages \
+          texinfo \
+          wpa_supplicant"
+
 
 setup_hostname
 setup_password
+
+for package in `echo $PACKAGES`;do
+    perform_task_arg install_package $package "Installing $package "
+    ret=$?
+    check_ok $ret "ERR: $package install exit code: $ret. Check $POSTINSTALL_LOG for more information\n"
+done

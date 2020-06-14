@@ -22,6 +22,17 @@ perform_task() {
     return $ret
 }
 
+perform_task_arg() {
+    task=$1
+    arg=$2
+    message=$3
+    print_msg "$message"
+    $task $arg
+    ret=$?
+    [ $ret -eq 0 ] && print_msg 'OK\n' || print_msg 'FAILED\n'
+    return $ret
+}
+
 check_ok() {
     ret=$1
     message=$2
