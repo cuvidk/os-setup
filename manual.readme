@@ -1,0 +1,14 @@
+Recommended steps after running preinstall.sh:
+    1. Partition and format disk.
+    2. Mount the root partion in /mnt (if using UEFI mount EFI system partition in /mnt/efi)
+    3. Install the essential packages using pacstrap
+    4. Generate fstab
+    5. Chroot into the new system
+    6. Setup the bootloader (optional)
+    7. Setup microcode updates (optional but recommended)
+    8. Run ./postinstall.sh
+
+These steps are highly dependent on multiple factors like computer hardware, firmware, user preferences
+and can't really be automated.
+
+Anyways, for more details of the steps above visit wiki.archlinux.org/index.php/Installation_guide
