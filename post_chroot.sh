@@ -5,24 +5,26 @@
 GLOBAL_CONFIG_DIR='/etc/conf.d'
 PROFILE_SCRIPTS_DIR='/etc/profile.d'
 POSTINSTALL_LOG='log.postinstall'
-CONFIG_FILES_URL='https://github.com/cuvidk/config-files'
+GENERIG_ERR="Check $POSTINSTALL_LOG for more information."
 
-if [ -t 1 ]; then
-    "$0" >$POSTINSTALL_LOG 2>&1
-    exit 0
-fi
+PACKAGES="vim \
+          man-db \
+          man-pages \
+          texinfo \
+          wpa_supplicant \
+	  ttf-roboto \
+          i3-gaps \
+          i3lock \
+          i3status
+          rxvt-unicode \
+          xorg-server \
+	  xorg-xinit \
+          grub \
+          efibootmgr \
+          osprober \
+          zsh \
+          "
 
-perform_task check_uefi_boot 'Checking if system is booted in UEFI mode '
-ret=$?
-[ $ret != 0 ] && print_msg 'The installer scripts are limited to UEFI systems.\n' && exit 1
-
-perform_task check_root 'Checking for root '
-ret=$?
-[ $ret != 0 ] && print_msg 'This script needs to be run as root.\n' && exit 2
-
-perform_task check_conn 'Checking for internet connection '
-ret=$?
-[ $ret != 0 ] && print_msg 'Unable to reach the internet. Check your connection.\n' && exit 3
 
 ################################################################################
 
@@ -79,30 +81,17 @@ nvidia_dedicated_graphics() {
 
 ################################################################################
 
-PACKAGES="vim \
-          man-db \
-          man-pages \
-          texinfo \
-          wpa_supplicant \
-	  ttf-roboto \
-          i3-gaps \
-          i3lock \
-          i3status
-          rxvt-unicode \
-          xorg-server \
-	  xorg-xinit \
-          grub \
-          efibootmgr \
-          osprober \
-          zsh \
-          "
+if [ -t 1 ]; then
+    print_msg "ERR: Don't run this manually. Run post_partition.sh instead or read README.md for more information about how to use this installer.\n"
+    exit 1
+fi
 
 setup_hostname
 setup_password
 
 for package in `echo $PACKAGES`;do
     perform_task_arg install_package $package "Installing $package " || \
-        print_msg "ERR: $package install exit code: $ret. Check $POSTINSTALL_LOG for more information\n"
+        print_msg "ERR: $package install exit code: $ret. $GENERIC_ERR\n"
 done
 
 intel_integrated_graphics && perform_task_arg install_package xf86-video-intel "Installing intel driver for integrated graphics "
@@ -110,9 +99,9 @@ nvidia_dedicated_graphics && perform_task_arg install_package nvidia "Installing
 nvidia_dedicated_graphics && intel_integrated_graphics && perform_task_arg install_package nvidia-prime "Instaling nvidia prime (for optimus technology) "
 
 perform_task configure_vim 'Configuring vim ' || \
-    print_msg "ERR: Configuring vim exit code: $ret. Check $POSTINSTALL_LOG for more information\n"
+    print_msg "ERR: Configuring vim exit code: $ret. $GENERIC_ERR\n"
 
 perform_task configure_urxvt 'Configuring urxvt ' || \
-    print_msg "ERR: Configuring urxvt exit code: $ret. Check $POSTINSTALL_LOG for more information\n"
+    print_msg "ERR: Configuring urxvt exit code: $ret. $GENERIC_ERR\n"
 
 print_msg 'Done\n'
