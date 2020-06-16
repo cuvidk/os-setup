@@ -14,11 +14,11 @@ fi
 
 perform_task check_root 'Checking for root '
 ret=$?
-check_ok $ret 'This script needs to be run as root.\n' || exit 1
+[ $ret != 0 ] && print_msg 'This script needs to be run as root.\n' && exit 1
 
 perform_task check_conn 'Checking for internet connection '
 ret=$?
-check_ok $ret 'Unable to reach the internet. Check your connection.\n' || exit 2
+[ $ret != 0 ] && print_msg 'Unable to reach the internet. Check your connection.\n' && exit 2
 
 ################################################################################
 
@@ -40,11 +40,11 @@ install_package() {
 
 configure_vim() {
     echo '#!/bin/sh'                                          >"$PROFILE_SCRIPTS_DIR/vim.sh" && \
-    echo "alias vim=\"vim -u $GLOBAL_CONFIG_DIR/vim/vimrc\"" >>"$PROFILE_SCRIPTS_DIR/vim.sh" && \
-    echo "export EDITOR=vim"                                 >>"$PROFILE_SCRIPTS_DIR/vim.sh" && \
-    chmod +x "$PROFILE_SCRIPTS_DIR/vim.sh" && \
-    mkdir -p "$GLOBAL_CONFIG_DIR/vim" && \
-    cp ./config-files/vim/.vimrc "$GLOBAL_CONFIG_DIR/vim/vimrc"
+        echo "alias vim=\"vim -u $GLOBAL_CONFIG_DIR/vim/vimrc\"" >>"$PROFILE_SCRIPTS_DIR/vim.sh" && \
+        echo "export EDITOR=vim"                                 >>"$PROFILE_SCRIPTS_DIR/vim.sh" && \
+        chmod +x "$PROFILE_SCRIPTS_DIR/vim.sh" && \
+        mkdir -p "$GLOBAL_CONFIG_DIR/vim" && \
+        cp ./config-files/vim/.vimrc "$GLOBAL_CONFIG_DIR/vim/vimrc"
 }
 
 configure_urxvt() {
@@ -65,6 +65,14 @@ EOF
     chmod +x /etc/X11/xinit/xinitrc.d/urxvt.sh
 }
 
+intel_integrated_graphics() {
+    lspci -v | grep VGA | grep -i intel
+}
+
+nvidia_dedicated_graphics() {
+    lspci -v | grep 3D | grep -i nvidia
+}
+
 ################################################################################
 
 PACKAGES="vim \
@@ -77,6 +85,11 @@ PACKAGES="vim \
           i3lock \
           i3status
           rxvt-unicode \
+          xorg-server \
+	  xorg-xinit \
+          grub \
+          efibootmgr \
+          osprober \
           zsh \
           "
 
@@ -84,17 +97,18 @@ setup_hostname
 setup_password
 
 for package in `echo $PACKAGES`;do
-    perform_task_arg install_package $package "Installing $package "
-    ret=$?
-    check_ok $ret "ERR: $package install exit code: $ret. Check $POSTINSTALL_LOG for more information\n"
+    perform_task_arg install_package $package "Installing $package " || \
+        print_msg "ERR: $package install exit code: $ret. Check $POSTINSTALL_LOG for more information\n"
 done
 
-perform_task configure_vim 'Configuring vim '
-ret=$?
-check_ok $ret "ERR: Configuring vim exit code: $ret. Check $POSTINSTALL_LOG for more information\n"
+intel_integrated_graphics && perform_task_arg install_package xf86-video-intel "Installing intel driver for integrated graphics "
+nvidia_dedicated_graphics && perform_task_arg install_package nvidia "Installing nvidia driver for dedicated graphics "
+nvidia_dedicated_graphics && intel_integrated_graphics && perform_task_arg install_package nvidia-prime "Instaling nvidia prime (for optimus technology) "
 
-perform_task configure_urxvt 'Configuring urxvt '
-ret=$?
-check_ok $ret "ERR: Configuring urxvt exit code: $ret. Check $POSTINSTALL_LOG for more information\n"
+perform_task configure_vim 'Configuring vim ' || \
+    print_msg "ERR: Configuring vim exit code: $ret. Check $POSTINSTALL_LOG for more information\n"
+
+perform_task configure_urxvt 'Configuring urxvt ' || \
+    print_msg "ERR: Configuring urxvt exit code: $ret. Check $POSTINSTALL_LOG for more information\n"
 
 print_msg 'Done\n'
