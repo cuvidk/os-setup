@@ -12,6 +12,10 @@ check_conn() {
     ping -c 4 archlinux.org
 }
 
+check_uefi_boot() {
+    [ -d /sys/firmware/efi/efivars -a `ls /sys/firmware/efi/efivars | wc -l` -gt 0 ]
+}
+
 perform_task() {
     task=$1
     message=$2

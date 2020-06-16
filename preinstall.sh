@@ -9,13 +9,17 @@ if [ -t 1 ]; then
     exit 0
 fi
 
+perform_task check_uefi_boot 'Checking if system is booted in UEFI mode '
+ret=$?
+[ $ret != 0 ] && print_msg 'The installer scripts are limited to UEFI systems.\n' && exit 1
+
 perform_task check_root 'Checking for root '
 ret=$?
-check_ok $ret 'This script needs to be run as root.\n' || exit 1
+[ $ret != 0 ] && print_msg 'This script needs to be run as root.\n' && exit 2
 
 perform_task check_conn 'Checking for internet connection '
 ret=$?
-check_ok $ret 'Unable to reach the internet. Check your connection.\n' || exit 2
+[ $ret != 0 ] && print_msg 'Unable to reach the internet. Check your connection.\n' && exit 3
 
 update_package_database() {
     pacman -Sy
@@ -32,16 +36,13 @@ setup_download_mirrors() {
     rankmirrors /etc/pacman.d/mirrorlist.filtered >/etc/pacman.d/mirrorlist
 }
 
-perform_task update_package_database 'Updating package database '
-ret=$?
-check_ok $ret "ERR: Updating package database exit code: $ret. Check $PREINSTALL_LOG for more details.\n"
+perform_task update_package_database 'Updating package database ' || \
+    print_msg "ERR: Updating package database exit code: $ret. Check $PREINSTALL_LOG for more details.\n"
 
-perform_task update_system_clock 'Updating system clock '
-ret=$?
-check_ok $ret "ERR: Updating system clock exit code: $ret. Check $PREINSTALL_LOG for more details.\n"
+perform_task update_system_clock 'Updating system clock ' || \
+    print_msg "ERR: Updating system clock exit code: $ret. Check $PREINSTALL_LOG for more details.\n"
 
-perform_task setup_download_mirrors 'Sorting download mirrors (this will take a while...) '
-ret=$?
-check_ok $ret "ERR: Sorting download mirrors exit code: $ret. Check $PREINSTALL_LOG for more details.\n"
+perform_task setup_download_mirrors 'Sorting download mirrors (this will take a while) ' || \
+    print_msg "ERR: Sorting download mirrors exit code: $ret. Check $PREINSTALL_LOG for more details.\n"
 
 print_msg "Done"
