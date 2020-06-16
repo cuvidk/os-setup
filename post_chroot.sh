@@ -1,11 +1,11 @@
 #!/bin/sh
 
-. ./util.sh
+. /os-setup/util.sh
 
 GLOBAL_CONFIG_DIR='/etc/conf.d'
 PROFILE_SCRIPTS_DIR='/etc/profile.d'
-POSTINSTALL_LOG='log.postinstall'
-GENERIG_ERR="Check $POSTINSTALL_LOG for more information."
+POST_CHROOT_LOG='log.post_partition'
+GENERIC_ERR="Check $POST_CHROOT_LOG for more information."
 
 PACKAGES="vim \
           man-db \
@@ -21,7 +21,7 @@ PACKAGES="vim \
 	  xorg-xinit \
           grub \
           efibootmgr \
-          osprober \
+          os-prober \
           zsh \
           "
 
@@ -50,12 +50,12 @@ configure_vim() {
         echo "export EDITOR=vim"                                 >>"$PROFILE_SCRIPTS_DIR/vim.sh" && \
         chmod +x "$PROFILE_SCRIPTS_DIR/vim.sh" && \
         mkdir -p "$GLOBAL_CONFIG_DIR/vim" && \
-        cp ./config-files/vim/.vimrc "$GLOBAL_CONFIG_DIR/vim/vimrc"
+        cp /os-setup/config-files/vim/.vimrc "$GLOBAL_CONFIG_DIR/vim/vimrc"
 }
 
 configure_urxvt() {
     mkdir -p "$GLOBAL_CONFIG_DIR/urxvt" && \
-    cp ./config-files/urxvt/URxvt "$GLOBAL_CONFIG_DIR/urxvt/URxvt" && \
+    cp /os-setup/config-files/urxvt/URxvt "$GLOBAL_CONFIG_DIR/urxvt/URxvt" && \
 
     cat <<-EOF >"$PROFILE_SCRIPTS_DIR/urxvt.sh"
 #!/bin/sh
