@@ -1,14 +1,7 @@
-Recommended steps after running preinstall.sh:
+Steps after running pre_partition.sh:
     1. Partition and format disk.
     2. Mount the root partion in /mnt, esp in /mnt/efi
-    3. Copy / clone this repo into the new system and run ./postinstall.sh
-
-Automate:
-    3. Install the essential packages using pacstrap
-    4. Generate fstab
-    5. Chroot into the new system
-    6. Setup the bootloader (optional)
-    7. Setup microcode updates (optional but recommended)
+    3. Run ./post_partition.sh
 
 These steps are highly dependent on multiple factors like computer hardware, firmware, user preferences
 and can't really be automated.

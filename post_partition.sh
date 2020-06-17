@@ -45,9 +45,11 @@ ret=$?
 [ $ret != 0 ] && print_msg "ERR: Installing essential packages exit code; $ret. $GENERIC_ERR\n" && exit 4
 
 perform_task generate_fstab 'Generating fstab ' && \
-    echo "#### /mnt/etc/fstab ####" >$(tty) && \
+    print_msg "--------------------------------\n" && \
+    print_msg "         /mnt/etc/fstab         \n" && \
+    print_msg "--------------------------------\n" && \
     cat /mnt/etc/fstab >$(tty) && \
-    echo "########################" >$(tty)
+    print_msg "--------------------------------\n"
 ret=$?
 [ $ret != 0 ] && print_msg "ERR: Generating fstab exit code: $ret. $GENERIC_ERR\n" && exit 5
 
@@ -55,5 +57,7 @@ perform_task prepare_change_root 'Preparing to chroot into the new system '
 ret=$?
 [ $ret != 0 ] && print_msg "ERR: Prepare chroot exit code: $ret. $GENERIC_ERR\n" && exit 6
 
-print_msg '########## chroot ##########\n'
+print_msg '############ chroot ############\n'
 arch-chroot /mnt /os-setup/post_chroot.sh
+ret=$?
+[ $ret != 0 ] && print_msg "ERR: Failed to chroot. $GENERIC_ERR\n" && exit 7

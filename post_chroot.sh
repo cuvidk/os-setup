@@ -81,19 +81,20 @@ nvidia_dedicated_graphics() {
 
 enable_ucode_updates() {
     if [ -n "$(lscpu | grep Vendor | grep -i intel)" ]; then
-        pacman -S intel-ucode
+        install_package intel-ucode
     elif [ -n "$(lscpu | grep Vendor | grep -i amd)" ]; then
-        pacman -S amd-ucode
+        install_package amd-ucode
     fi
 }
 
 install_grub_bootloader() {
+    print_msg '--------------------------------\n'
     print_msg 'Installing grub boot-loader\n'
-    print_msg '---------------------------\n'
+    print_msg '--------------------------------\n'
     grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB && \
         grub-mkconfig -o /boot/grub/grub.cfg >$(tty) 2>&1 && \
-        print_msg '----------SUCCESS----------\n' || \
-        print_msg '-----------FAILED----------\n'
+        print_msg '-------------SUCCESS------------\n' || \
+        print_msg '-------------FAILED-------------\n'
 }
 
 ################################################################################
@@ -120,6 +121,6 @@ install_grub_bootloader
 perform_task configure_vim 'Configuring vim '
 perform_task configure_urxvt 'Configuring urxvt '
 
-[ g_err_flag -eq 1 ] && print_msg "ERR: Errors were reported during installation. Check $POST_CHROOT_LOG for full install log.\n"
+[ $g_err_flag -eq 1 ] && print_msg "ERR: Errors were reported during installation. Check $POST_CHROOT_LOG for full install log.\n"
 
 print_msg 'Done\n'
