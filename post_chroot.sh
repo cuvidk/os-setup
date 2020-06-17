@@ -32,6 +32,9 @@ setup_hostname() {
     print_msg 'Pick a hostname (machine-name): '
     read hname
     echo "$hname" > /etc/hostname
+    echo '127.0.0.1 localhost' >/etc/hosts
+    echo '::1 localhost' >/etc/hosts
+    echo "127.0.1.1 $hname.localdomain $hname" >/etc/hosts
 }
 
 setup_root_password() {
@@ -45,6 +48,17 @@ setup_new_user() {
     useradd -m $g_user
     print_msg "Setting up password for user $g_user\n"
     passwd $g_user >$(tty) 2>&1
+}
+
+setup_timezone() {
+    ln -sf /usr/share/zoneinfo/Europe/Bucharest /etc/localtime && \
+        hwclock --systohc
+}
+
+setup_localization() {
+    sed -i 's/^#\(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen && \
+        locale-gen && \
+        echo 'LANG=en_US.UTF-8' >/etc/locale.conf
 }
 
 install_package() {
@@ -67,7 +81,7 @@ configure_urxvt() {
 
     cat <<-EOF >"$PROFILE_SCRIPTS_DIR/urxvt.sh"
 #!/bin/sh
-export APPLRESDIR="$GLOBAL_CONFIG_DIR/urxvt"
+export XAPPLRESDIR="$GLOBAL_CONFIG_DIR/urxvt"
 EOF
     chmod +x "$PROFILE_SCRIPTS_DIR/urxvt.sh" && \
 
@@ -125,6 +139,9 @@ fi
 setup_hostname
 setup_root_password
 setup_new_user
+
+perform_task setup_timezone 'Setting up timezone '
+perform_task setup_localization 'Setting up localization '
 
 for package in `echo $PACKAGES`; do
     perform_task_arg install_package $package "Installing package $package "
