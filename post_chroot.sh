@@ -13,30 +13,38 @@ PACKAGES="vim \
           texinfo \
           wpa_supplicant \
 	  ttf-roboto \
-          i3-gaps \
-          i3lock \
-          i3status
           rxvt-unicode \
-          xorg-server \
-	  xorg-xinit \
           grub \
           efibootmgr \
           os-prober \
+	  base-devel \
+          git \
           zsh \
+          xorg-server \
+	  xorg-xinit \
+          i3-gaps \
+          i3lock \
+          i3status
           "
-
-
 ################################################################################
 
 setup_hostname() {
-    print_msg 'Pick a hostname: '
+    print_msg 'Pick a hostname (machine-name): '
     read hname
     echo "$hname" > /etc/hostname
 }
 
-setup_password() {
+setup_root_password() {
     print_msg 'Setting up root password\n'
     passwd >$(tty) 2>&1
+}
+
+setup_new_user() {
+    print_msg 'Create a non-root username: '
+    read g_user
+    useradd -m $g_user
+    print_msg "Setting up password for user $g_user"
+    passwd $g_user >$(tty) 2>&1
 }
 
 install_package() {
@@ -97,6 +105,13 @@ install_grub_bootloader() {
         print_msg '-------------FAILED-------------\n'
 }
 
+install_ly_display_manager() {
+    git clone "https://aur.archlinux.org/ly-git.git" /os-setup/ly
+    chown -R $g_user:$g_user /os-setup/ly
+    cd /os-setup/ly
+    su $g_user --command="makepkg -si"
+}
+
 ################################################################################
 
 if [ -t 1 ]; then
@@ -105,7 +120,8 @@ if [ -t 1 ]; then
 fi
 
 setup_hostname
-setup_password
+setup_root_password
+setup_new_user
 
 for package in `echo $PACKAGES`; do
     perform_task_arg install_package $package "Installing package $package "
@@ -114,6 +130,8 @@ done
 intel_integrated_graphics && perform_task_arg install_package xf86-video-intel "Installing intel driver for integrated graphics "
 nvidia_dedicated_graphics && perform_task_arg install_package nvidia "Installing nvidia driver for dedicated graphics "
 nvidia_dedicated_graphics && intel_integrated_graphics && perform_task_arg install_package nvidia-prime "Instaling nvidia prime (for optimus technology) "
+
+perform_task install_ly_display_manager 'Installing Ly display manager '
 
 perform_task enable_ucode_updates 'Enabling ucode updates '
 install_grub_bootloader

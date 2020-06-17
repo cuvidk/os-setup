@@ -17,8 +17,12 @@ generate_fstab() {
 
 
 prepare_change_root() {
-    mkdir -p /mnt/os-setup && \
-        cp -R . /mnt/os-setup
+    mkdir -p /mnt/os-setup
+    cp -R . /mnt/os-setup
+}
+
+clean() {
+    rm -rf /mnt/os-setup
 }
 
 ################################################################################
@@ -61,3 +65,5 @@ print_msg '############ chroot ############\n'
 arch-chroot /mnt /os-setup/post_chroot.sh
 ret=$?
 [ $ret != 0 ] && print_msg "ERR: Failed to chroot. $GENERIC_ERR\n" && exit 7
+
+perform_task clean
