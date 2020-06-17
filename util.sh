@@ -1,5 +1,7 @@
 #!/bin/sh
 
+g_err_flag=0
+
 print_msg() {
     echo -n -e "$1">>$(tty)
 }
@@ -22,7 +24,12 @@ perform_task() {
     print_msg "$message"
     $task
     ret=$?
-    [ $ret -eq 0 ] && print_msg 'OK\n' || print_msg 'FAILED\n'
+    if [ $ret -eq 0 ]; then
+        print_msg 'OK\n'
+    else
+        print_msg 'FAILED\n'
+        g_err_flag=1
+    fi
     return $ret
 }
 
@@ -33,7 +40,12 @@ perform_task_arg() {
     print_msg "$message"
     $task $arg
     ret=$?
-    [ $ret -eq 0 ] && print_msg 'OK\n' || print_msg 'FAILED\n'
+    if [ $ret -eq 0 ]; then
+        print_msg 'OK\n'
+    else
+        print_msg 'FAILED\n'
+        g_err_flag=1
+    fi
     return $ret
 }
 

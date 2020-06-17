@@ -79,29 +79,47 @@ nvidia_dedicated_graphics() {
     lspci -v | grep 3D | grep -i nvidia
 }
 
+enable_ucode_updates() {
+    if [ -n "$(lscpu | grep Vendor | grep -i intel)" ]; then
+        pacman -S intel-ucode
+    elif [ -n "$(lscpu | grep Vendor | grep -i amd)" ]; then
+        pacman -S amd-ucode
+    fi
+}
+
+install_grub_bootloader() {
+    print_msg 'Installing grub boot-loader\n'
+    print_msg '---------------------------\n'
+    grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB && \
+        grub-mkconfig -o /boot/grub/grub.cfg >$(tty) 2>&1 && \
+        print_msg '----------SUCCESS----------\n' || \
+        print_msg '-----------FAILED----------\n'
+}
+
 ################################################################################
 
 if [ -t 1 ]; then
-    print_msg "ERR: Don't run this manually. Run post_partition.sh instead or read README.md for more information about how to use this installer.\n"
+    print_msg "ERR: Don't run this manually. Run post_partition.sh instead or read README.md for more information on how to use this installer.\n"
     exit 1
 fi
 
 setup_hostname
 setup_password
 
-for package in `echo $PACKAGES`;do
-    perform_task_arg install_package $package "Installing $package " || \
-        print_msg "ERR: $package install exit code: $ret. $GENERIC_ERR\n"
+for package in `echo $PACKAGES`; do
+    perform_task_arg install_package $package "Installing package $package "
 done
 
 intel_integrated_graphics && perform_task_arg install_package xf86-video-intel "Installing intel driver for integrated graphics "
 nvidia_dedicated_graphics && perform_task_arg install_package nvidia "Installing nvidia driver for dedicated graphics "
 nvidia_dedicated_graphics && intel_integrated_graphics && perform_task_arg install_package nvidia-prime "Instaling nvidia prime (for optimus technology) "
 
-perform_task configure_vim 'Configuring vim ' || \
-    print_msg "ERR: Configuring vim exit code: $ret. $GENERIC_ERR\n"
+perform_task enable_ucode_updates 'Enabling ucode updates '
+install_grub_bootloader
 
-perform_task configure_urxvt 'Configuring urxvt ' || \
-    print_msg "ERR: Configuring urxvt exit code: $ret. $GENERIC_ERR\n"
+perform_task configure_vim 'Configuring vim '
+perform_task configure_urxvt 'Configuring urxvt '
+
+[ g_err_flag -eq 1 ] && print_msg "ERR: Errors were reported during installation. Check $POST_CHROOT_LOG for full install log.\n"
 
 print_msg 'Done\n'

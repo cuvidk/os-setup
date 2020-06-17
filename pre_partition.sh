@@ -41,13 +41,10 @@ perform_task check_conn 'Checking for internet connection '
 ret=$?
 [ $ret != 0 ] && print_msg 'Unable to reach the internet. Check your connection.\n' && exit 3
 
-perform_task update_package_database 'Updating package database ' || \
-    print_msg "ERR: Updating package database exit code: $ret. $GENERIC_ERR\n"
+perform_task update_package_database 'Updating package database '
+perform_task update_system_clock 'Updating system clock '
+perform_task setup_download_mirrors 'Sorting download mirrors (this will take a while) '
 
-perform_task update_system_clock 'Updating system clock ' || \
-    print_msg "ERR: Updating system clock exit code: $ret. $GENERIC_ERR\n"
-
-perform_task setup_download_mirrors 'Sorting download mirrors (this will take a while) ' || \
-    print_msg "ERR: Sorting download mirrors exit code: $ret. $GENERIC_ERR\n"
+[ g_err_flag -eq 1 ] && print_msg "ERR: Errors were reported during installation. Check $PRE_PARTITION_LOG for full install log.\n"
 
 print_msg "Done\n"
