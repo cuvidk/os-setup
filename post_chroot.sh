@@ -43,7 +43,7 @@ setup_new_user() {
     print_msg 'Create a non-root username: '
     read g_user
     useradd -m $g_user
-    print_msg "Setting up password for user $g_user"
+    print_msg "Setting up password for user $g_user\n"
     passwd $g_user >$(tty) 2>&1
 }
 
@@ -109,7 +109,10 @@ install_ly_display_manager() {
     git clone "https://aur.archlinux.org/ly-git.git" /os-setup/ly
     chown -R $g_user:$g_user /os-setup/ly
     cd /os-setup/ly
-    su $g_user --command="makepkg -si"
+    su $g_user --command="makepkg -s"
+    pacman -U --noconfirm "$(ls | grep ly-git)"
+    systemctl enable ly.service
+    systemctl disable getty@tty2.service
 }
 
 ################################################################################
