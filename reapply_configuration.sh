@@ -39,5 +39,3 @@ perform_task configure_ly 'Applying ly config '
 perform_task configure_x11_input 'Applying x11 config '
 
 errors_encountered && print_msg "ERR: Errors were reported during installation. Check $REAPPLY_CONFIG_LOG for more info.\n"
-
-print_msg 'Done\n'

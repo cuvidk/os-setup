@@ -54,12 +54,12 @@ setup_root_password() {
 
 setup_new_user() {
     print_msg 'Create a non-root username: '
-    read g_user
-    useradd -m $g_user
-    print_msg "Setting up password for user $g_user\n"
-    passwd $g_user >$(tty) 2>&1 
-    print_msg "Adding $g_user as a sudoer\n"
-    echo "$g_user ALL=(ALL) NOPASSWD:ALL" >"/etc/sudoers.d/$g_user"
+    read g_user && \
+        useradd -m $g_user && \
+        print_msg "Setting up password for user $g_user\n" && \
+        passwd $g_user >$(tty) 2>&1  && \
+        print_msg "Adding $g_user as a sudoer\n" && \
+        echo "$g_user ALL=(ALL) NOPASSWD:ALL" >"/etc/sudoers.d/$g_user"
 }
 
 fix_sudo() {
@@ -91,7 +91,7 @@ install_aur_package() {
         su $g_user --command="makepkg -s --noconfirm" && \
         pacman -U --noconfirm *.pkg.tar.xz
     ret=$?
-    cd /os_setup
+    cd /os-setup
     return $ret
 }
 
@@ -162,5 +162,3 @@ perform_task fix_sudo "Adding $g_user in sudoers list "
 ./reapply_configuration.sh
 
 errors_encountered && print_msg "ERR: Errors were reported during installation. Check $POST_CHROOT_LOG for full install log.\n"
-
-print_msg 'Done\n'
