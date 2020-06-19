@@ -14,6 +14,7 @@ PACKAGES="vim \
           man-pages \
           texinfo \
           wpa_supplicant \
+          dhcpcd \
           ttf-fira-code \
           ttf-ubuntu-font-family \
           rxvt-unicode \
