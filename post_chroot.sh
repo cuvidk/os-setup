@@ -30,6 +30,12 @@ PACKAGES="vim \
           i3lock \
           i3status
           "
+
+AUR_PACKAGES="google-chrome \
+              ly-git \
+              ttf-iosevka
+             "
+
 ################################################################################
 
 setup_hostname() {
@@ -73,6 +79,16 @@ install_package() {
     pacman -S --noconfirm "$package_name"
 }
 
+install_aur_package() {
+    aur_package_name="$1"
+    git clone "https://aur.archlinux.org/$aur_package_name.git" && \
+        chown -R $g_user:$g_user "./$aur_package_name" && \
+        cd "./$aur_package_name" && \
+        su $g_user --command="makepkg -s" && \
+        pacman -U --noconfirm *.pkg.tar.xz && \
+        cd -
+}
+
 intel_integrated_graphics() {
     lspci -v | grep VGA | grep -i intel
 }
@@ -99,15 +115,9 @@ install_grub_bootloader() {
         print_msg '-------------FAILED-------------\n'
 }
 
-install_ly_display_manager() {
-    git clone "https://aur.archlinux.org/ly-git.git"
-    chown -R $g_user:$g_user ./ly-git
-    cd ./ly-git
-    su $g_user --command="makepkg -s"
-    pacman -U --noconfirm "$(ls | grep ly-git)"
-    cd -
-    systemctl enable ly.service
+enable_ly_display_manager() {
     systemctl disable getty@tty2.service
+    systemctl enable ly.service
 }
 
 ################################################################################
@@ -128,11 +138,15 @@ for package in `echo $PACKAGES`; do
     perform_task_arg install_package $package "Installing package $package "
 done
 
+for package in `echo $AUR_PACKAGES`; do
+    perform_task_arg install_aur_package $package "Installing AUR package $package "
+done
+
 intel_integrated_graphics && perform_task_arg install_package xf86-video-intel "Installing intel driver for integrated graphics "
 nvidia_dedicated_graphics && perform_task_arg install_package nvidia "Installing nvidia driver for dedicated graphics "
 nvidia_dedicated_graphics && intel_integrated_graphics && perform_task_arg install_package nvidia-prime "Instaling nvidia prime (for optimus technology) "
 
-perform_task install_ly_display_manager 'Installing Ly display manager '
+perform_task enable_ly_display_manager 'Enabling Ly display manager '
 
 perform_task enable_ucode_updates 'Enabling ucode updates '
 install_grub_bootloader
