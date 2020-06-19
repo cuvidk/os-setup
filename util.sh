@@ -52,5 +52,5 @@ perform_task_arg() {
 }
 
 errors_encountered() {
-    [ $g_err_fag -eq 1 ]
+    [ $g_err_flag -eq 1 ]
 }

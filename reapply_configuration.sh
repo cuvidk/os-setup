@@ -20,6 +20,11 @@ configure_ly() {
     cp -R ./config-files/ly/etc /
 }
 
+configure_x11_input() {
+    # is it worth copying this only if a touchpad is present ?
+    cp -R ./config-files/X11/etc /
+}
+
 
 ################################################################################
 
@@ -31,6 +36,7 @@ fi
 perform_task configure_vim 'Applying vim config '
 perform_task configure_urxvt 'Applying urxvt config '
 perform_task configure_ly 'Applying ly config '
+perform_task configure_x11_input 'Applying x11 config '
 
 errors_encountered && print_msg "ERR: Errors were reported during installation. Check $REAPPLY_CONFIG_LOG for more info.\n"
 
