@@ -12,7 +12,8 @@ configure_vim() {
 
 configure_urxvt() {
     mkdir -p "/etc/conf.d/urxvt" && \
-    cp -R ./config-files/urxvt/etc /
+    cp -R ./config-files/urxvt/etc / && \
+    chmod +x /etc/X11/xinit/xinitrc.d/urxvt.sh
 }
 
 configure_ly() {
