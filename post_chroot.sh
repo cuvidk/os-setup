@@ -133,16 +133,16 @@ if [ -t 1 ]; then
     exit 1
 fi
 
-perform_task setup_hostname
-perform_task setup_root_password
-perform_task setup_new_user
-
-perform_task setup_timezone 'Setting up timezone '
-perform_task setup_localization 'Setting up localization '
-
 for package in `echo $PACKAGES`; do
     perform_task_arg install_package $package "Installing package $package "
 done
+
+perform_task setup_hostname
+perform_task setup_root_password
+perform_task setup_new_user # NOTE: sudo package required before this step or else multiple installation steps will fail
+
+perform_task setup_timezone 'Setting up timezone '
+perform_task setup_localization 'Setting up localization '
 
 for package in `echo $AUR_PACKAGES`; do
     perform_task_arg install_aur_package $package "Installing AUR package $package "
