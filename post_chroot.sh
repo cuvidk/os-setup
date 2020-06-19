@@ -15,7 +15,6 @@ PACKAGES="vim \
           texinfo \
           wpa_supplicant \
           ttf-fira-code \
-          ttf-iosevka \
           ttf-ubuntu-font-family \
           rxvt-unicode \
           grub \
