@@ -1,6 +1,7 @@
 #!/bin/sh
 
-. /os-setup/util.sh
+cd /os-setup
+. ./util.sh
 
 GLOBAL_CONFIG_DIR='/etc/conf.d'
 PROFILE_SCRIPTS_DIR='/etc/profile.d'
@@ -12,7 +13,9 @@ PACKAGES="vim \
           man-pages \
           texinfo \
           wpa_supplicant \
-	  ttf-roboto \
+          ttf-fira-code \
+          ttf-iosevka \
+          ttf-ubuntu-font-family \
           rxvt-unicode \
           grub \
           efibootmgr \
@@ -66,33 +69,6 @@ install_package() {
     pacman -S --noconfirm "$package_name"
 }
 
-configure_vim() {
-    echo '#!/bin/sh'                                          >"$PROFILE_SCRIPTS_DIR/vim.sh" && \
-        echo "alias vim=\"vim -u $GLOBAL_CONFIG_DIR/vim/vimrc\"" >>"$PROFILE_SCRIPTS_DIR/vim.sh" && \
-        echo "export EDITOR=vim"                                 >>"$PROFILE_SCRIPTS_DIR/vim.sh" && \
-        chmod +x "$PROFILE_SCRIPTS_DIR/vim.sh" && \
-        mkdir -p "$GLOBAL_CONFIG_DIR/vim" && \
-        cp /os-setup/config-files/vim/.vimrc "$GLOBAL_CONFIG_DIR/vim/vimrc"
-}
-
-configure_urxvt() {
-    mkdir -p "$GLOBAL_CONFIG_DIR/urxvt" && \
-    cp /os-setup/config-files/urxvt/URxvt "$GLOBAL_CONFIG_DIR/urxvt/URxvt" && \
-
-    cat <<-EOF >"$PROFILE_SCRIPTS_DIR/urxvt.sh"
-#!/bin/sh
-export XAPPLRESDIR="$GLOBAL_CONFIG_DIR/urxvt"
-EOF
-    chmod +x "$PROFILE_SCRIPTS_DIR/urxvt.sh" && \
-
-    cat <<-EOF >/etc/X11/xinit/xinitrc.d/urxvt.sh
-#!/bin/sh
-urxvtd -q -f -o
-export TERMINAL="urxvtc"
-EOF
-    chmod +x /etc/X11/xinit/xinitrc.d/urxvt.sh
-}
-
 intel_integrated_graphics() {
     lspci -v | grep VGA | grep -i intel
 }
@@ -120,11 +96,12 @@ install_grub_bootloader() {
 }
 
 install_ly_display_manager() {
-    git clone "https://aur.archlinux.org/ly-git.git" /os-setup/ly
-    chown -R $g_user:$g_user /os-setup/ly
-    cd /os-setup/ly
+    git clone "https://aur.archlinux.org/ly-git.git"
+    chown -R $g_user:$g_user ./ly-git
+    cd ./ly-git
     su $g_user --command="makepkg -s"
     pacman -U --noconfirm "$(ls | grep ly-git)"
+    cd -
     systemctl enable ly.service
     systemctl disable getty@tty2.service
 }
@@ -156,8 +133,7 @@ perform_task install_ly_display_manager 'Installing Ly display manager '
 perform_task enable_ucode_updates 'Enabling ucode updates '
 install_grub_bootloader
 
-perform_task configure_vim 'Configuring vim '
-perform_task configure_urxvt 'Configuring urxvt '
+./reapply_configuration.sh
 
 [ $g_err_flag -eq 1 ] && print_msg "ERR: Errors were reported during installation. Check $POST_CHROOT_LOG for full install log.\n"
 
