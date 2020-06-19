@@ -9,6 +9,7 @@ POST_CHROOT_LOG='log.post_partition'
 GENERIC_ERR="Check $POST_CHROOT_LOG for more information."
 
 PACKAGES="vim \
+          ranger \
           man-db \
           man-pages \
           texinfo \
