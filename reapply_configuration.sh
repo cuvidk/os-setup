@@ -32,6 +32,6 @@ perform_task configure_vim 'Applying vim config '
 perform_task configure_urxvt 'Applying urxvt config '
 perform_task configure_ly 'Applying ly config '
 
-[ $g_err_flag -eq 1 ] && print_msg "ERR: Errors were reported during installation. Check $REAPPLY_CONFIG_LOG for more info.\n"
+errors_encountered && print_msg "ERR: Errors were reported during installation. Check $REAPPLY_CONFIG_LOG for more info.\n"
 
 print_msg 'Done\n'

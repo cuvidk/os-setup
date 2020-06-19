@@ -48,10 +48,13 @@ setup_root_password() {
 
 setup_new_user() {
     print_msg 'Create a non-root username: '
-    read g_user
-    useradd -m $g_user
-    print_msg "Setting up password for user $g_user\n"
-    passwd $g_user >$(tty) 2>&1
+    read g_user && \
+        useradd -m $g_user && \
+        print_msg "Setting up password for user $g_user\n" && \
+        passwd $g_user >$(tty) 2>&1 && \
+        print_msg "Adding $g_user as a sudoer\n" && \
+        echo 'Defaults targetpw  # Ask for the password of the target user' >/etc/sudoers.d/$g_user.sudoer && \
+        echo "$g_user ALL=(ALL) ALL  # WARNING: only use this together with 'Defaults targetpw" >>/etc/sudoers.d/$g_user.sudoer
 }
 
 setup_timezone() {
@@ -114,9 +117,9 @@ if [ -t 1 ]; then
     exit 1
 fi
 
-setup_hostname
-setup_root_password
-setup_new_user
+perform_task setup_hostname
+perform_task setup_root_password
+perform_task setup_new_user
 
 perform_task setup_timezone 'Setting up timezone '
 perform_task setup_localization 'Setting up localization '
@@ -136,6 +139,6 @@ install_grub_bootloader
 
 ./reapply_configuration.sh
 
-[ $g_err_flag -eq 1 ] && print_msg "ERR: Errors were reported during installation. Check $POST_CHROOT_LOG for full install log.\n"
+errors_encountered && print_msg "ERR: Errors were reported during installation. Check $POST_CHROOT_LOG for full install log.\n"
 
 print_msg 'Done\n'

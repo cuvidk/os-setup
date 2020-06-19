@@ -21,15 +21,16 @@ check_uefi_boot() {
 perform_task() {
     task=$1
     message=$2
-    print_msg "$message"
+    [ -n "$message" ] && print_msg "$message"
     $task
     ret=$?
     if [ $ret -eq 0 ]; then
-        print_msg 'OK\n'
+        [ -n "$message" ] && print_msg 'OK\n'
     else
-        print_msg 'FAILED\n'
+        [ -n "$message" ] && print_msg 'FAILED\n'
         g_err_flag=1
     fi
+    unset message
     return $ret
 }
 
@@ -37,23 +38,19 @@ perform_task_arg() {
     task=$1
     arg=$2
     message=$3
-    print_msg "$message"
+    [ -n "$message" ] && print_msg "$message"
     $task $arg
     ret=$?
     if [ $ret -eq 0 ]; then
-        print_msg 'OK\n'
+        [ -n "$message" ] && print_msg 'OK\n'
     else
-        print_msg 'FAILED\n'
+        [ -n "$message" ] && print_msg 'FAILED\n'
         g_err_flag=1
     fi
+    unset message
     return $ret
 }
 
-check_ok() {
-    ret=$1
-    message=$2
-    if [ $ret != 0 ]; then
-        print_msg "$message"
-    fi
-    return $ret
+errors_encountered() {
+    [ $g_err_fag -eq 1 ]
 }
