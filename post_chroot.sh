@@ -54,13 +54,17 @@ setup_root_password() {
 
 setup_new_user() {
     print_msg 'Create a non-root username: '
-    read g_user && \
-        useradd -m $g_user && \
-        print_msg "Setting up password for user $g_user\n" && \
-        passwd $g_user >$(tty) 2>&1 && \
-        print_msg "Adding $g_user as a sudoer\n" && \
-        echo 'Defaults targetpw  # Ask for the password of the target user' >/etc/sudoers.d/$g_user.sudoer && \
-        echo "$g_user ALL=(ALL) ALL  # WARNING: only use this together with 'Defaults targetpw" >>/etc/sudoers.d/$g_user.sudoer
+    read g_user
+    useradd -m $g_user
+    print_msg "Setting up password for user $g_user\n"
+    passwd $g_user >$(tty) 2>&1 
+    print_msg "Adding $g_user as a sudoer\n"
+    echo "$g_user ALL=(ALL) NOPASSWD:ALL" >"/etc/sudoers.d/$g_user"
+}
+
+fix_sudo() {
+    echo 'Defaults targetpw' >"/etc/sudoers.d/$g_user"
+    echo "$g_user ALL=(ALL) ALL" >>"/etc/sudoers.d/$g_user"
 }
 
 setup_timezone() {
@@ -84,9 +88,11 @@ install_aur_package() {
     git clone "https://aur.archlinux.org/$aur_package_name.git" && \
         chown -R $g_user:$g_user "./$aur_package_name" && \
         cd "./$aur_package_name" && \
-        su $g_user --command="makepkg -s" && \
-        pacman -U --noconfirm *.pkg.tar.xz && \
-        cd -
+        su $g_user --command="makepkg -s --noconfirm" && \
+        pacman -U --noconfirm *.pkg.tar.xz
+    ret=$?
+    cd /os_setup
+    return $ret
 }
 
 intel_integrated_graphics() {
@@ -150,6 +156,8 @@ perform_task enable_ly_display_manager 'Enabling Ly display manager '
 
 perform_task enable_ucode_updates 'Enabling ucode updates '
 install_grub_bootloader
+
+perform_task fix_sudo "Adding $g_user in sudoers list "
 
 ./reapply_configuration.sh
 
