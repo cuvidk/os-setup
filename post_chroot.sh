@@ -13,11 +13,14 @@ PACKAGES="vim \
           man-db \
           man-pages \
           texinfo \
-          wpa_supplicant \
-          dhcpcd \
+          networkmanager \
+          nm-applet \
+          gnome-keyring \
           ttf-fira-code \
           ttf-ubuntu-font-family \
           rxvt-unicode \
+          pulseaudio \
+          alsa-utils \
           grub \
           efibootmgr \
           os-prober \
@@ -126,6 +129,17 @@ enable_ly_display_manager() {
     systemctl enable ly.service
 }
 
+enable_network_manager() {
+    systemctl enable NetworkManager.service
+}
+
+configure_gnome_keyring() {
+    last_auth_entry=$(grep --line-number -E "^auth" /etc/pam.d/login | tail -n 1 | sed 's/\([0-9]\+\):.*/\1/')
+    sed -i "$last_auth_entry s/^\(auth.*\)/&\nauth\toptional\tpam_gnome_keyring.so/" /etc/pam.d/login
+    last_session_entry=$(grep --line-number -E "^session" /etc/pam.d/login | tail -n 1 | sed 's/\([0-9]\+\):.*/\1/')
+    sed -i "$last_auth_entry s/^\(session.*\)/&\session\toptional\tpam_gnome_keyring.so auto_start/" /etc/pam.d/login
+}
+
 ################################################################################
 
 if [ -t 1 ]; then
@@ -153,6 +167,8 @@ nvidia_dedicated_graphics && perform_task_arg install_package nvidia "Installing
 nvidia_dedicated_graphics && intel_integrated_graphics && perform_task_arg install_package nvidia-prime "Instaling nvidia prime (for optimus technology) "
 
 perform_task enable_ly_display_manager 'Enabling Ly display manager '
+perform_task enable_network_manager 'Enabling Network Manager '
+perform_task configure_gnome_keyring 'Enabling sensitive information encryption through gnome keyring '
 
 perform_task enable_ucode_updates 'Enabling ucode updates '
 install_grub_bootloader
