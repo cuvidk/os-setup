@@ -15,6 +15,7 @@ PACKAGES="vim \
           texinfo \
           networkmanager \
           network-manager-applet \
+          notification-daemon \
           gnome-keyring \
           seahorse \
           ttf-fira-code \
