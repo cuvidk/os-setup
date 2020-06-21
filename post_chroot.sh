@@ -14,7 +14,7 @@ PACKAGES="vim \
           man-pages \
           texinfo \
           networkmanager \
-          nm-applet \
+          network-manager-applet \
           gnome-keyring \
           seahorse \
           ttf-fira-code \
@@ -139,10 +139,10 @@ configure_gnome_keyring() {
     last_auth_entry=$(grep --line-number -E "^auth" /etc/pam.d/login | tail -n 1 | sed 's/\([0-9]\+\):.*/\1/')
     sed -i "$last_auth_entry s/^\(auth.*\)/&\nauth\toptional\tpam_gnome_keyring.so/" /etc/pam.d/login
     last_session_entry=$(grep --line-number -E "^session" /etc/pam.d/login | tail -n 1 | sed 's/\([0-9]\+\):.*/\1/')
-    sed -i "$last_auth_entry s/^\(session.*\)/&\session\toptional\tpam_gnome_keyring.so auto_start/" /etc/pam.d/login
+    sed -i "$last_session_entry s/^\(session.*\)/&\nsession\toptional\tpam_gnome_keyring.so auto_start/" /etc/pam.d/login
 }
 
-################################################################################
+###############################################################################
 
 if [ -t 1 ]; then
     print_msg "ERR: Don't run this manually. Run post_partition.sh instead or read README.md for more information on how to use this installer.\n"
