@@ -16,11 +16,13 @@ PACKAGES="vim \
           networkmanager \
           nm-applet \
           gnome-keyring \
+          seahorse \
           ttf-fira-code \
           ttf-ubuntu-font-family \
           rxvt-unicode \
           pulseaudio \
           alsa-utils \
+          pavucontrol \
           grub \
           efibootmgr \
           os-prober \
