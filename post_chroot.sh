@@ -19,6 +19,7 @@ PACKAGES="vim \
           seahorse \
           ttf-fira-code \
           ttf-ubuntu-font-family \
+          noto-fonts-emoji \
           rxvt-unicode \
           pulseaudio \
           alsa-utils \
@@ -33,7 +34,8 @@ PACKAGES="vim \
 	  xorg-xinit \
           i3-gaps \
           i3lock \
-          i3status
+          i3status \
+          dmenu
           "
 
 AUR_PACKAGES="google-chrome \
