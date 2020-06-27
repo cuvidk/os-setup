@@ -45,6 +45,4 @@ perform_task update_package_database 'Updating package database '
 perform_task update_system_clock 'Updating system clock '
 perform_task setup_download_mirrors 'Sorting download mirrors (this will take a while) '
 
-errors_encountered && print_msg "ERR: Errors were reported during installation. Check $PRE_PARTITION_LOG for full install log.\n"
-
-print_msg "Done\n"
+errors_encountered && print_msg "ERR: Errors were reported during installation. Check $PRE_PARTITION_LOG for full install log.\n" || print_msg "$0 finished\n"

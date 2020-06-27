@@ -67,5 +67,5 @@ ret=$?
 [ $ret != 0 ] && print_msg "ERR: Failed to chroot. $GENERIC_ERR\n" && exit 7
 
 perform_task clean 'Removing os setup files from the new system '
-print_msg "Done\n"
+print_msg "$0 finished\n"
 

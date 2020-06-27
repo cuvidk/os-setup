@@ -42,4 +42,4 @@ perform_task configure_ly 'Applying ly config '
 perform_task configure_x11_input 'Applying x11 config '
 perform_task notification_daemon 'Applying notification-daemon config '
 
-errors_encountered && print_msg "ERR: Errors were reported during installation. Check $REAPPLY_CONFIG_LOG for more info.\n"
+errors_encountered && print_msg "ERR: Errors were reported during installation. Check $REAPPLY_CONFIG_LOG for more info.\n" || print_msg "$0 finished\n"
