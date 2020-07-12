@@ -109,7 +109,17 @@ intel_integrated_graphics() {
 }
 
 nvidia_dedicated_graphics() {
-    lspci -v | grep 3D | grep -i nvidia
+    lspci -v | grep -e VGA -e 3D | grep -i nvidia
+}
+
+amd_dedicated_graphics() {
+    lspci -v | grep -e VGA -e 3D | grep -i amd
+}
+
+install_amd_gpu_drivers() {
+    perform_task_arg install_package xf86-video-amdgpu 'Installing amd driver for dedicated graphics ' && \
+    perform_task_arg install_package mesa 'Installing package mesa ' && \
+    perform_task_arg install_package libva-mesa-driver 'Installling libva-mesa-driver '
 }
 
 enable_ucode_updates() {
@@ -171,6 +181,8 @@ done
 intel_integrated_graphics && perform_task_arg install_package xf86-video-intel "Installing intel driver for integrated graphics "
 nvidia_dedicated_graphics && perform_task_arg install_package nvidia "Installing nvidia driver for dedicated graphics "
 nvidia_dedicated_graphics && intel_integrated_graphics && perform_task_arg install_package nvidia-prime "Instaling nvidia prime (for optimus technology) "
+amd_dedicated_graphics && install_amd_gpu_drivers
+
 
 perform_task enable_ly_display_manager 'Enabling Ly display manager '
 perform_task enable_network_manager 'Enabling Network Manager '
