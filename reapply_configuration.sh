@@ -6,6 +6,12 @@ REAPPLY_CONFIG_LOG="log.reapply_configuration"
 
 ################################################################################
 
+configure_i3() {
+    mkdir -p "$g_home_dir/.config/i3" && \
+        cp ./config-files/i3/config "$g_home_dir/.config/i3/" && \
+        chown -R "$g_user":"$g_user" "$g_home_dir/.config/i3"
+}
+
 configure_vim() {
     cp -R ./config-files/vim/etc /
 }
@@ -32,10 +38,15 @@ notification_daemon() {
 ################################################################################
 
 if [ -t 1 ]; then
-    "$0" >"$REAPPLY_CONFIG_LOG" 2>&1
+    "$0" "$@" >"$REAPPLY_CONFIG_LOG" 2>&1
     exit $?
 fi
 
+g_user=`whoami`
+[ -n "$1" ] && g_user="$1"
+g_home_dir="/home/$g_user"
+
+perform_task configure_i3 'Applying i3 config '
 perform_task configure_vim 'Applying vim config '
 perform_task configure_urxvt 'Applying urxvt config '
 perform_task configure_ly 'Applying ly config '

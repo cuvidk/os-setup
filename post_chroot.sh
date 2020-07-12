@@ -25,6 +25,7 @@ PACKAGES="vim \
           pulseaudio \
           alsa-utils \
           pavucontrol \
+          pasystray \
           grub \
           efibootmgr \
           os-prober \
@@ -180,6 +181,6 @@ install_grub_bootloader
 
 perform_task fix_sudo "Adding $g_user in sudoers list "
 
-./reapply_configuration.sh
+./reapply_configuration.sh "$g_user"
 
 errors_encountered && print_msg "ERR: Errors were reported during installation. Check $POST_CHROOT_LOG for full install log.\n" || print_msg "$0 finished\n"
