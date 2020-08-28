@@ -12,8 +12,9 @@
 # disable title bars (required by gaps)
 for_window [class=".*"] border pixel 1
 
-gaps inner 10
-gaps outer 5
+gaps inner 6
+gaps outer 0
+smart_borders on
 
 set $mod Mod4
 
