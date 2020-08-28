@@ -42,8 +42,12 @@ if [ -t 1 ]; then
     exit $?
 fi
 
-g_user=`whoami`
-[ -n "$1" ] && g_user="$1"
+if [ -z "$1" ]; then
+    print_msg "Usage: $0 <user_to_apply_settings_to>\n"
+    exit 2
+fi
+
+g_user="$1"
 g_home_dir="/home/$g_user"
 
 perform_task configure_i3 'Applying i3 config '
