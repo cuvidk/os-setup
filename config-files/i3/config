@@ -9,6 +9,12 @@
 #
 # Please see https://i3wm.org/docs/userguide.html for a complete reference!
 
+# disable title bars (required by gaps)
+for_window [class=".*"] border pixel 1
+
+gaps inner 10
+gaps outer 5
+
 set $mod Mod4
 
 # Font for window titles. Will also be used by the bar unless a different font
@@ -180,4 +186,5 @@ bindsym $mod+r mode "resize"
 # finds out, if available)
 bar {
         status_command i3status
+        position top
 }
