@@ -37,7 +37,8 @@ PACKAGES="vim \
           i3-gaps \
           i3lock \
           i3status \
-          dmenu
+          dmenu \
+          feh
           "
 
 AUR_PACKAGES="google-chrome \

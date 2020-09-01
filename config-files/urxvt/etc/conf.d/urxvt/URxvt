@@ -11,3 +11,7 @@ URxvt.scrollBar: false
 URxvt.letterSpace: 0
 URxvt.font: xft:Fira Code:style=Regular:pixelsize=14
 URxvt.boldFont: xft:Fira Code:style=Bold:pixelsize=14
+
+URxvt*inheritPixmap: true
+URxvt*transparent: true
+URxvt*shading: 15

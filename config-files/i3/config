@@ -10,11 +10,15 @@
 # Please see https://i3wm.org/docs/userguide.html for a complete reference!
 
 # disable title bars (required by gaps)
-for_window [class=".*"] border pixel 1
+for_window [class=".*"] border pixel 0
 
 gaps inner 6
 gaps outer 0
 smart_borders on
+smart_gaps on
+
+# sets random wallpaper
+exec_always --no-startup-id feh --bg-fill --randomize ~/Pictures/wallpapers/*
 
 set $mod Mod4
 
