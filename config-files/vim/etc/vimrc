@@ -5,6 +5,7 @@ set background=light
 colorscheme elflord
 
 set nu
+set relativenumber
 set hidden
 set autoindent
 set cindent
