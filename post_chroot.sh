@@ -13,6 +13,7 @@ PACKAGES="vim \
           man-db \
           man-pages \
           texinfo \
+          wget \
           networkmanager \
           network-manager-applet \
           notification-daemon \
