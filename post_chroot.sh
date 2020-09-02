@@ -39,7 +39,8 @@ PACKAGES="vim \
           i3lock \
           i3status \
           dmenu \
-          feh
+          feh \
+          python-pip
           "
 
 AUR_PACKAGES="google-chrome \
