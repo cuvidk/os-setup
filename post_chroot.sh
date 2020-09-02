@@ -40,7 +40,9 @@ PACKAGES="vim \
           i3status \
           dmenu \
           feh \
-          python-pip
+          xss-lock \
+          python-pip \
+          xorg-server-xvfb
           "
 
 AUR_PACKAGES="google-chrome \
