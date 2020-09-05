@@ -161,6 +161,11 @@ configure_gnome_keyring() {
     sed -i "$last_session_entry s/^\(session.*\)/&\nsession\toptional\tpam_gnome_keyring.so auto_start/" /etc/pam.d/login
 }
 
+make_usefull_dirs() {
+    mkdir -p "/home/$g_user/Pictures/wallpapers"
+    mkdir -p "/home/$g_user/Work"
+}
+
 ###############################################################################
 
 if [ -t 1 ]; then
@@ -197,6 +202,7 @@ perform_task enable_ucode_updates 'Enabling ucode updates '
 install_grub_bootloader
 
 perform_task fix_sudo "Adding $g_user in sudoers list "
+perform_task make_usefull_dirs "Creating some usefull directories for $g_user "
 
 ./reapply_configuration.sh "$g_user"
 
