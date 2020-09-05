@@ -9,7 +9,7 @@ REAPPLY_CONFIG_LOG="log.reapply_configuration"
 configure_i3() {
     mkdir -p "$g_home_dir/.config/i3" && \
         cp ./config-files/i3/config "$g_home_dir/.config/i3/" && \
-        chown -R "$g_user":"$g_user" "$g_home_dir/.config/i3"
+        chown -R "$g_user":"$g_user" "$g_home_dir/.config"
 }
 
 configure_vim() {
