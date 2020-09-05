@@ -16,6 +16,7 @@ PACKAGES="vim \
           wget \
           networkmanager \
           network-manager-applet \
+          ntp \
           notification-daemon \
           gnome-keyring \
           seahorse \
@@ -40,9 +41,7 @@ PACKAGES="vim \
           i3status \
           dmenu \
           feh \
-          xss-lock \
-          python-pip \
-          xorg-server-xvfb
+          xss-lock
           "
 
 AUR_PACKAGES="google-chrome \
@@ -83,7 +82,8 @@ fix_sudo() {
 
 setup_timezone() {
     ln -sf /usr/share/zoneinfo/Europe/Bucharest /etc/localtime && \
-        hwclock --systohc
+        hwclock --systohc &&
+        systemctl enable ntpd.service
 }
 
 setup_localization() {
