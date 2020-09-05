@@ -163,7 +163,9 @@ configure_gnome_keyring() {
 
 make_usefull_dirs() {
     mkdir -p "/home/$g_user/Pictures/wallpapers"
+    chown -R "$g_user":"$g_user" "/home/$g_user/Pictures/wallpapers"
     mkdir -p "/home/$g_user/Work"
+    chown -R "$g_user":"$g_user" "/home/$g_user/Work"
 }
 
 ###############################################################################
