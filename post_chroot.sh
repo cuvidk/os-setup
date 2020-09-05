@@ -103,7 +103,7 @@ install_aur_package() {
         chown -R $g_user:$g_user "./$aur_package_name" && \
         cd "./$aur_package_name" && \
         su $g_user --command="makepkg -s --noconfirm" && \
-        pacman -U --noconfirm *.pkg.tar.xz
+        pacman -U --noconfirm *.pkg.tar.*
     ret=$?
     cd /os-setup
     return $ret
