@@ -21,8 +21,10 @@ PACKAGES="vim \
           gnome-keyring \
           seahorse \
           ttf-fira-code \
-          ttf-ubuntu-font-family \
+          noto-fonts \
+          noto-fonts-cjk \
           noto-fonts-emoji \
+          noto-fonts-extra \
           rxvt-unicode \
           pulseaudio \
           alsa-utils \
