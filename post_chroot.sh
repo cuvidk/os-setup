@@ -45,8 +45,7 @@ PACKAGES="vim \
           "
 
 AUR_PACKAGES="google-chrome \
-              ly-git \
-              ttf-iosevka
+              ly-git
              "
 
 ################################################################################
