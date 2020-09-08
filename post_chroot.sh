@@ -17,6 +17,8 @@ PACKAGES="vim \
           networkmanager \
           network-manager-applet \
           ntp \
+          bluez \
+          bluez-utils \
           notification-daemon \
           gnome-keyring \
           seahorse \
@@ -27,6 +29,7 @@ PACKAGES="vim \
           noto-fonts-extra \
           rxvt-unicode \
           pulseaudio \
+          pulseaudio-bluetooth \
           alsa-utils \
           pavucontrol \
           pasystray \
@@ -155,6 +158,10 @@ enable_network_manager() {
     systemctl enable NetworkManager.service
 }
 
+enable_bluetooth() {
+    systemctl enable bluetooth.service
+}
+
 configure_gnome_keyring() {
     last_auth_entry=$(grep --line-number -E "^auth" /etc/pam.d/login | tail -n 1 | sed 's/\([0-9]\+\):.*/\1/')
     sed -i "$last_auth_entry s/^\(auth.*\)/&\nauth\toptional\tpam_gnome_keyring.so/" /etc/pam.d/login
@@ -199,6 +206,7 @@ amd_dedicated_graphics && install_amd_gpu_drivers
 
 perform_task enable_ly_display_manager 'Enabling Ly display manager '
 perform_task enable_network_manager 'Enabling Network Manager '
+perform_task enable_bluetooth 'Enabling Bluetooth '
 perform_task configure_gnome_keyring 'Enabling sensitive information encryption through gnome keyring '
 
 perform_task enable_ucode_updates 'Enabling ucode updates '
