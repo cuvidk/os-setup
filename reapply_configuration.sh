@@ -8,8 +8,12 @@ REAPPLY_CONFIG_LOG="log.reapply_configuration"
 
 configure_i3() {
     mkdir -p "$g_home_dir/.config/i3" && \
-        cp ./config-files/i3/config "$g_home_dir/.config/i3/" && \
-        chown -R "$g_user":"$g_user" "$g_home_dir/.config"
+        cp ./config-files/i3/config "$g_home_dir/.config/i3/"
+}
+
+configure_i3status() {
+    mkdir -p "$g_home_dir/.config/i3status" && \
+        cp ./config-files/i3status/config "$g_home_dir/.config/i3status/"
 }
 
 configure_vim() {
@@ -35,6 +39,10 @@ notification_daemon() {
     cp -R ./config-files/notification-daemon/usr /
 }
 
+fix_config_permissions() {
+    chown -R "$g_user":"$g_user" "$g_home_dir/.config"
+}
+
 ################################################################################
 
 if [ -t 1 ]; then
@@ -51,10 +59,12 @@ g_user="$1"
 g_home_dir="/home/$g_user"
 
 perform_task configure_i3 'Applying i3 config '
+perform_task configure_i3status 'Applying i3status config '
 perform_task configure_vim 'Applying vim config '
 perform_task configure_urxvt 'Applying urxvt config '
 perform_task configure_ly 'Applying ly config '
 perform_task configure_x11_input 'Applying x11 config '
 perform_task notification_daemon 'Applying notification-daemon config '
+perform_task fix_config_permissions 'Fixing permissions '
 
 errors_encountered && print_msg "ERR: Errors were reported during installation. Check $REAPPLY_CONFIG_LOG for more info.\n" || print_msg "$0 finished\n"
