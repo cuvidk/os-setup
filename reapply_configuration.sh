@@ -7,12 +7,12 @@ REAPPLY_CONFIG_LOG="log.reapply_configuration"
 ################################################################################
 
 configure_i3() {
-    mkdir -p "$g_home_dir/.config/i3" && \
+    mkdir -p "$g_home_dir/.config/i3" &&
         cp ./config-files/i3/config "$g_home_dir/.config/i3/"
 }
 
 configure_i3status() {
-    mkdir -p "$g_home_dir/.config/i3status" && \
+    mkdir -p "$g_home_dir/.config/i3status" &&
         cp ./config-files/i3status/config "$g_home_dir/.config/i3status/"
 }
 
@@ -21,8 +21,8 @@ configure_vim() {
 }
 
 configure_urxvt() {
-    mkdir -p "/etc/conf.d/urxvt" && \
-    cp -R ./config-files/urxvt/etc / && \
+    mkdir -p "/etc/conf.d/urxvt" &&
+    cp -R ./config-files/urxvt/etc / &&
     chmod +x /etc/X11/xinit/xinitrc.d/urxvt.sh
 }
 
@@ -46,12 +46,12 @@ fix_config_permissions() {
 ################################################################################
 
 if [ -t 1 ]; then
-    "$0" "$@" >"$REAPPLY_CONFIG_LOG" 2>&1
+    "${0}" "$@" >"${REAPPLY_CONFIG_LOG}" 2>&1
     exit $?
 fi
 
-if [ -z "$1" ]; then
-    print_msg "Usage: $0 <user_to_apply_settings_to>\n"
+if [ -z "${1}" ]; then
+    print_msg "Usage: ${0} <user_to_apply_settings_to>\n"
     exit 2
 fi
 
@@ -67,4 +67,4 @@ perform_task configure_x11_input 'Applying x11 config '
 perform_task notification_daemon 'Applying notification-daemon config '
 perform_task fix_config_permissions 'Fixing permissions '
 
-errors_encountered && print_msg "ERR: Errors were reported during installation. Check $REAPPLY_CONFIG_LOG for more info.\n" || print_msg "$0 finished\n"
+errors_encountered && print_msg "ERR: Errors were reported during installation. Check ${REAPPLY_CONFIG_LOG} for more info.\n" || print_msg "${0} finished\n"

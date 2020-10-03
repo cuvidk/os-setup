@@ -19,38 +19,36 @@ check_uefi_boot() {
 }
 
 perform_task() {
-    task=$1
-    message=$2
-    [ -n "$message" ] && print_msg "$message"
-    $task
-    ret=$?
-    if [ $ret -eq 0 ]; then
-        [ -n "$message" ] && print_msg 'OK\n'
+    local task=$1
+    local message=$2
+    [ -n "${message}" ] && print_msg "${message}"
+    ${task}
+    local ret=$?
+    if [ ${ret} -eq 0 ]; then
+        [ -n "${message}" ] && print_msg "\r[ OK ] ${message}\n"
     else
-        [ -n "$message" ] && print_msg 'FAILED\n'
+        [ -n "${message}" ] && print_msg "\r[ FAIL ] ${message}\n"
         g_err_flag=1
     fi
-    unset message
-    return $ret
+    return ${ret}
 }
 
 perform_task_arg() {
-    task=$1
-    arg=$2
-    message=$3
-    [ -n "$message" ] && print_msg "$message"
-    $task $arg
-    ret=$?
-    if [ $ret -eq 0 ]; then
-        [ -n "$message" ] && print_msg 'OK\n'
+    local task=$1
+    local arg=$2
+    local message=$3
+    [ -n "${message}" ] && print_msg "${message}"
+    ${task} ${arg}
+    local ret=$?
+    if [ ${ret} -eq 0 ]; then
+        [ -n "${message}" ] && print_msg "\r[ OK ] ${message}\n"
     else
-        [ -n "$message" ] && print_msg 'FAILED\n'
+        [ -n "${message}" ] && print_msg "\r[ FAIL ] ${message}\n"
         g_err_flag=1
     fi
-    unset message
-    return $ret
+    return ${ret}
 }
 
 errors_encountered() {
-    [ $g_err_flag -eq 1 ]
+    [ ${g_err_flag} -eq 1 ]
 }
