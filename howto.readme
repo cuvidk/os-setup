@@ -1,0 +1,10 @@
+Run install.sh only after doing the following:
+    1. Create some swap space and swapon it
+    2. Create space for a root partition, format it and mount it under /mnt
+    3. [ Optional ] Create any additional partition, format it and mount it wherever you want under /mnt
+    4. Run ./install.sh
+
+These steps are highly dependent on multiple factors like computer hardware, firmware, user preferences
+and can't really be automated.
+
+Anyways, for more details of the steps above visit wiki.archlinux.org/index.php/Installation_guide

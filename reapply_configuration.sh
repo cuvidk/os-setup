@@ -2,7 +2,7 @@
 
 . ./util.sh
 
-REAPPLY_CONFIG_LOG="log.reapply_configuration"
+REAPPLY_CONFIG_LOG="stdout.log"
 
 ################################################################################
 
@@ -67,4 +67,6 @@ perform_task configure_x11_input 'Applying x11 config '
 perform_task notification_daemon 'Applying notification-daemon config '
 perform_task fix_config_permissions 'Fixing permissions '
 
-errors_encountered && print_msg "ERR: Errors were reported during installation. Check ${REAPPLY_CONFIG_LOG} for more info.\n" || print_msg "${0} finished\n"
+errors_encountered &&
+    print_msg "ERR: ${0} finished with errors. Check ${REAPPLY_CONFIG_LOG} for details.\n" ||
+    print_msg "${0} finished with success.\n"

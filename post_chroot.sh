@@ -3,7 +3,7 @@
 cd /os-setup
 . ./util.sh
 
-POST_CHROOT_LOG='log.post_partition'
+INSTALL_LOG='stdout.log'
 
 PACKAGES="vim
           ranger
@@ -176,7 +176,7 @@ make_usefull_dirs() {
 ###############################################################################
 
 if [ -t 1 ]; then
-    print_msg "ERR: Don't run this manually. Run post_partition.sh instead or read README.md for more information on how to use this installer.\n"
+    print_msg "ERR: Don't run this manually. Run install.sh instead or read README.md for more information on how to use this installer.\n"
     exit 1
 fi
 
@@ -214,4 +214,6 @@ perform_task make_usefull_dirs "Creating some usefull directories for $g_user "
 
 ./reapply_configuration.sh "$g_user"
 
-errors_encountered && print_msg "ERR: Errors were reported during installation. Check ${POST_CHROOT_LOG} for full install log.\n" || print_msg "${0} finished\n"
+errors_encountered &&
+    print_msg "ERR: ${0} finished with errors. Check ${INSTALL_LOG} for details.\n" ||
+    print_msg "${0} finished with success.\n"
