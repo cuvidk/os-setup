@@ -2,8 +2,9 @@
 
 . ./util.sh
 
-INSTALL_LOG='stdout.log'
-GENERIC_ERR="Check ${INSTALL_LOG} for more information."
+STDOUT_LOG='stdout.log'
+STDERR_LOG='stderr.log'
+GENERIC_ERR="Check ${STDERR_LOG} / ${STDOUT_LOG} for more information."
 
 ################################################################################
 
@@ -42,7 +43,7 @@ clean() {
 ################################################################################
 
 if [ -t 1 ]; then
-    "${0}" >"${INSTALL_LOG}" 2>&1
+    "${0}" >"${STDOUT_LOG}" 2>${STDERR_LOG}
     exit 0
 fi
 
@@ -87,13 +88,13 @@ arch-chroot /mnt /os-setup/post_chroot.sh
 ret=$?
 [ ${ret} != 0 ] && print_msg "ERR: Failed to chroot. ${GENERIC_ERR}\n" && exit 7
 
-#cat "${INSTALL_LOG}" "/mnt/${INSTALL_LOG}" >"${INSTALL_LOG}.concat" &&
-#    mv "${INSTALL_LOG}.concat" "${INSTALL_LOG}"
+#cat "${STDOUT_LOG}" "/mnt/${STDOUT_LOG}" >"${STDOUT_LOG}.concat" &&
+#    mv "${STDOUT_LOG}.concat" "${STDOUT_LOG}"
 
 print_msg '################################################\n'
 
 perform_task clean 'Removing os setup files from the new system '
 
 errors_encountered &&
-    print_msg "ERR: ${0} finished with errors. Check ${INSTALL_LOG} for details.\n" ||
+    print_msg "ERR: ${0} finished with errors. Check ${STDERR_LOG} / ${STDOUT_LOG} for details.\n" ||
     print_msg "${0} finished with success.\n"

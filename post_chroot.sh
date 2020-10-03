@@ -3,7 +3,8 @@
 cd /os-setup
 . ./util.sh
 
-INSTALL_LOG='stdout.log'
+STDOUT_LOG='stdout.log'
+STDERR_LOG='stderr.log'
 
 PACKAGES="vim
           ranger
@@ -215,5 +216,5 @@ perform_task make_usefull_dirs "Creating some usefull directories for $g_user "
 ./reapply_configuration.sh "$g_user"
 
 errors_encountered &&
-    print_msg "ERR: ${0} finished with errors. Check ${INSTALL_LOG} for details.\n" ||
+    print_msg "ERR: ${0} finished with errors. Check ${STDERR_LOG} / ${STDOUT_LOG} for details.\n" ||
     print_msg "${0} finished with success.\n"

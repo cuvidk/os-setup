@@ -2,7 +2,8 @@
 
 . ./util.sh
 
-REAPPLY_CONFIG_LOG="stdout.log"
+STDOUT_LOG="stdout.log"
+STDERR_LOG="stderr.log"
 
 ################################################################################
 
@@ -46,7 +47,7 @@ fix_config_permissions() {
 ################################################################################
 
 if [ -t 1 ]; then
-    "${0}" "$@" >"${REAPPLY_CONFIG_LOG}" 2>&1
+    "${0}" "$@" >"${STDOUT_LOG}" 2>"${STDERR_LOG}"
     exit $?
 fi
 
@@ -68,5 +69,5 @@ perform_task notification_daemon 'Applying notification-daemon config '
 perform_task fix_config_permissions 'Fixing permissions '
 
 errors_encountered &&
-    print_msg "ERR: ${0} finished with errors. Check ${REAPPLY_CONFIG_LOG} for details.\n" ||
+    print_msg "ERR: ${0} finished with errors. Check ${STDERR_LOG} / ${STDOUT_LOG} for details.\n" ||
     print_msg "${0} finished with success.\n"
