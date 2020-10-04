@@ -45,41 +45,63 @@ PACKAGES="vim
           dmenu
           feh
           xss-lock
+          openssl
           "
 
 AUR_PACKAGES="google-chrome
               ly-git
              "
+AUR_PKG_INSTALL_USER='aurpkginstalluser'
+HOSTNAME_REGEX='^hostname[ \t]*=[ \t]*[[:alnum:]]+$'
+ROOT_PASS_REGEX='^root_pass[ \t]*=[ \t]*.+$'
+USER_REGEX='^user[ \t]*=[ \t]*[[:alnum:]]+:.+:[0|1]$'
 
 ################################################################################
 
 setup_hostname() {
-    print_msg 'Pick a hostname (machine-name): '
-    read hname
-    echo "$hname" > /etc/hostname
+    local hname=$(grep -E "${HOSTNAME_REGEX}" "${g_config_file}" | sed 's/.*=[ \t]*//')
+    echo "${hname}" > /etc/hostname
     echo '127.0.0.1 localhost' >/etc/hosts
     echo '::1 localhost' >>/etc/hosts
-    echo "127.0.1.1 $hname.localdomain $hname" >>/etc/hosts
+    echo "127.0.1.1 ${hname}.localdomain ${hname}" >>/etc/hosts
 }
 
 setup_root_password() {
-    print_msg 'Setting up root password\n'
-    passwd >$(tty) 2>&1
+    local pass=$(grep -E "${ROOT_PASS_REGEX}" "${g_config_file}" | sed 's/.*=[ \t]*//')
+    usermod -p "$(openssl passwd -6 "${pass}")" root
 }
 
-setup_new_user() {
-    print_msg 'Create a non-root username: '
-    read g_user &&
-        useradd -m $g_user &&
-        print_msg "Setting up password for user $g_user\n" &&
-        passwd $g_user >$(tty) 2>&1  &&
-        print_msg "Adding $g_user as a sudoer\n" &&
-        echo "$g_user ALL=(ALL) NOPASSWD:ALL" >"/etc/sudoers.d/$g_user"
+setup_users() {
+    local users=$(grep -E "${USER_REGEX}" "${g_config_file}" | sed 's/.*=[ \t]*//')
+    for user in ${users}; do
+        local username="$(echo ${user} | cut -d ':' -f1)"
+        local password="$(echo ${user} | grep -o -E ':.*:' | sed 's/^:\(.*\):$/\1/')"
+        local issudoer="$(echo ${user} | grep -o -E '[1|0]$')"
+        useradd -m "${username}"
+        usermod -p "$(openssl passwd -6 "${password}")" "${username}"
+        if [ ${issudoer} -eq 1 ]; then
+            echo 'Defaults targetpw' >"/etc/sudoers.d/${username}"
+            echo "${username} ALL=(ALL) ALL" >>"/etc/sudoers.d/${username}"
+        fi
+        mkdir -p "/home/${username}/Pictures/wallpapers"
+        chown -R "${username}":"${username}" "/home/${username}/Pictures/wallpapers"
+        mkdir -p "/home/${username}/Work"
+        chown -R "${username}":"${username}" "/home/${username}/Work"
+        ./reapply_configuration.sh "${username}"
+    done
 }
 
-fix_sudo() {
-    echo 'Defaults targetpw' >"/etc/sudoers.d/$g_user"
-    echo "$g_user ALL=(ALL) ALL" >>"/etc/sudoers.d/$g_user"
+pre_install_aur_packages() {
+    # I need a regular user that can elevate to root
+    # through sudo so I can install AUR packages through
+    # makepkg command
+    useradd "${AUR_PKG_INSTALL_USER}"
+    echo "${AUR_PKG_INSTALL_USER} ALL=(ALL) NOPASSWD:ALL" >"/etc/sudoers.d/${AUR_PKG_INSTALL_USER}"
+}
+
+post_install_aur_packages() {
+    userdel "${AUR_PKG_INSTALL_USER}"
+    rm "/etc/sudoers.d/${AUR_PKG_INSTALL_USER}"
 }
 
 setup_timezone() {
@@ -102,9 +124,9 @@ install_package() {
 install_aur_package() {
     local aur_package_name="$1"
     git clone "https://aur.archlinux.org/${aur_package_name}.git" &&
-        chown -R $g_user:$g_user "./${aur_package_name}" &&
+        chown -R ${AUR_PKG_INSTALL_USER}:${AUR_PKG_INSTALL_USER} "./${aur_package_name}" &&
         cd "./${aur_package_name}" &&
-        su $g_user --command="makepkg -s --noconfirm" &&
+        su ${AUR_PKG_INSTALL_USER} --command="makepkg -s --noconfirm" &&
         pacman -U --noconfirm *.pkg.tar.*
     local ret=$?
     cd /os-setup
@@ -167,34 +189,50 @@ configure_gnome_keyring() {
     sed -i "${last_session_entry} s/^\(session.*\)/&\nsession\toptional\tpam_gnome_keyring.so auto_start/" /etc/pam.d/login
 }
 
-make_usefull_dirs() {
-    mkdir -p "/home/$g_user/Pictures/wallpapers"
-    chown -R "$g_user":"$g_user" "/home/$g_user/Pictures/wallpapers"
-    mkdir -p "/home/$g_user/Work"
-    chown -R "$g_user":"$g_user" "/home/$g_user/Work"
-}
-
 ###############################################################################
 
 if [ -t 1 ]; then
-    print_msg "ERR: Don't run this manually. Run install.sh instead or read README.md for more information on how to use this installer.\n"
+    print_msg "ERR: Run ./install.sh instead. Check readme for more details.\n"
     exit 1
 fi
+
+if [ -z "$(echo ${@} | grep '\-\-config ')" ]; then
+    print_msg "ERR: Run ./install.sh instead. Check readme for more details.\n"
+    exit 2
+fi
+
+while [ $# -gt 0 ];
+do
+    option=${1}
+    case ${option} in
+        "--config")
+            g_config_file=${2}
+            shift
+            shift
+            ;;
+        *)
+            echo "Unknown option ${option}; ignoring"
+            shift
+            ;;
+    esac
+done
 
 for package in ${PACKAGES}; do
     perform_task_arg install_package ${package} "Installing package ${package} "
 done
 
-perform_task setup_hostname
-perform_task setup_root_password
-perform_task setup_new_user # NOTE: sudo package required before this step or else multiple installation steps will fail
+perform_task setup_hostname 'Setting up hostname'
+perform_task setup_root_password 'Setting up root password'
+perform_task setup_users 'Setting up users'
 
 perform_task setup_timezone 'Setting up timezone '
 perform_task setup_localization 'Setting up localization '
 
+perform_task pre_install_aur_packages 'Setting up prerequisites to install AUR packages'
 for package in ${AUR_PACKAGES}; do
     perform_task_arg install_aur_package ${package} "Installing AUR package ${package} "
 done
+perform_task post_install_aur_packages 'Tearing down prerequisites for AUR packages'
 
 intel_integrated_graphics && perform_task_arg install_package xf86-video-intel "Installing intel driver for integrated graphics "
 nvidia_dedicated_graphics && perform_task_arg install_package nvidia "Installing nvidia driver for dedicated graphics "
@@ -209,11 +247,6 @@ perform_task configure_gnome_keyring 'Enabling sensitive information encryption 
 
 perform_task enable_ucode_updates 'Enabling ucode updates '
 install_grub_bootloader
-
-perform_task fix_sudo "Adding $g_user in sudoers list "
-perform_task make_usefull_dirs "Creating some usefull directories for $g_user "
-
-./reapply_configuration.sh "$g_user"
 
 errors_encountered &&
     print_msg "ERR: ${0} finished with errors. Check ${STDERR_LOG} / ${STDOUT_LOG} for details.\n" ||
