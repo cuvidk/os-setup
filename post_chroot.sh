@@ -85,7 +85,7 @@ setup_users() {
             echo "${username} ALL=(ALL) ALL" >>"/etc/sudoers.d/${username}"
         fi
         mkdir -p "/home/${username}/Pictures/wallpapers"
-        chown -R "${username}":"${username}" "/home/${username}/Pictures/wallpapers"
+        chown -R "${username}":"${username}" "/home/${username}/Pictures"
         mkdir -p "/home/${username}/Work"
         chown -R "${username}":"${username}" "/home/${username}/Work"
         ./reapply_configuration.sh "${username}"
