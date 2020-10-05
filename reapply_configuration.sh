@@ -68,4 +68,4 @@ perform_task configure_x11_input "Applying x11 config for user ${g_user}"
 perform_task notification_daemon "Applying notification-daemon config for user ${g_user}"
 perform_task fix_config_permissions "Fixing permissions "
 
-errors_encountered && exit 1
+errors_encountered && exit 1 || exit 0
