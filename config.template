@@ -1,0 +1,4 @@
+hostname   = hostname_here
+root_pass  = root_password_here
+user       = username_1:user_password_1:1
+user       = username_2:user_password_2:0

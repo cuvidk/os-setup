@@ -4,6 +4,7 @@
 
 STDOUT_LOG='stdout.log'
 STDERR_LOG='stderr.log'
+CONFIG_FILE='./install.config'
 GENERIC_ERR="Check ${STDERR_LOG} / ${STDOUT_LOG} for more information."
 
 HOSTNAME_REGEX='^hostname[ \t]*=[ \t]*[[:alnum:]]+$'
@@ -17,10 +18,10 @@ usage() {
 }
 
 check_config_file() {
-    [ -f "${g_config_file}" ] &&
-        [ -n "$(grep -E "${HOSTNAME_REGEX}" "${g_config_file}")" ] &&
-        [ -n "$(grep -E "${ROOT_PASS_REGEX}" "${g_config_file}")" ] &&
-        [ "$(grep -c -E "${USER_REGEX}" "${g_config_file}")" == "$(grep -c -E '^user' ${g_config_file})" ]
+    [ -f "${CONFIG_FILE}" ] &&
+        [ -n "$(grep -E "${HOSTNAME_REGEX}" "${CONFIG_FILE}")" ] &&
+        [ -n "$(grep -E "${ROOT_PASS_REGEX}" "${CONFIG_FILE}")" ] &&
+        [ "$(grep -c -E "${USER_REGEX}" "${CONFIG_FILE}")" == "$(grep -c -E '^user' ${CONFIG_FILE})" ]
 }
 
 update_package_database() {
@@ -58,15 +59,31 @@ clean() {
 ################################################################################
 
 if [ -t 1 ]; then
-    "${0}" >"${STDOUT_LOG}" 2>${STDERR_LOG}
+    "${0}" "${@}" >"${STDOUT_LOG}" 2>${STDERR_LOG}
     exit 0
 fi
 
 [ -z "$(echo ${@} | grep '\-\-config ')" ] && usage && exit 1
 
+while [ $# -gt 0 ];
+do
+    option=${1}
+    case ${option} in
+        "--config")
+            cp "${2}" "${CONFIG_FILE}"
+            shift
+            shift
+            ;;
+        *)
+            echo "Unknown option ${option}; ignoring"
+            shift
+            ;;
+    esac
+done
+
 perform_task check_config_file "Checking for valid config file"
 ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Invalid config file ${g_config_file}. ${GENERIC_ERR}\n" && exit 2
+[ ${ret} != 0 ] && print_msg "ERR: Invalid config file. ${GENERIC_ERR}\n" && exit 2
 
 perform_task check_uefi_boot 'Checking if system is booted in UEFI mode '
 ret=$?
@@ -105,7 +122,7 @@ print_msg '################################################\n'
 print_msg '#################### chroot ####################\n'
 print_msg '################################################\n'
 
-arch-chroot /mnt /os-setup/post_chroot.sh "${@}"
+arch-chroot /mnt /os-setup/post_chroot.sh
 ret=$?
 [ ${ret} != 0 ] && print_msg "ERR: Failed to chroot. ${GENERIC_ERR}\n" && exit 9
 

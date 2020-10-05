@@ -5,6 +5,7 @@ cd /os-setup
 
 STDOUT_LOG='stdout.log'
 STDERR_LOG='stderr.log'
+CONFIG_FILE='./install.config'
 
 PACKAGES="vim
           ranger
@@ -59,7 +60,7 @@ USER_REGEX='^user[ \t]*=[ \t]*[[:alnum:]]+:.+:[0|1]$'
 ################################################################################
 
 setup_hostname() {
-    local hname=$(grep -E "${HOSTNAME_REGEX}" "${g_config_file}" | sed 's/.*=[ \t]*//')
+    local hname=$(grep -E "${HOSTNAME_REGEX}" "${CONFIG_FILE}" | sed 's/.*=[ \t]*//')
     echo "${hname}" > /etc/hostname
     echo '127.0.0.1 localhost' >/etc/hosts
     echo '::1 localhost' >>/etc/hosts
@@ -67,12 +68,12 @@ setup_hostname() {
 }
 
 setup_root_password() {
-    local pass=$(grep -E "${ROOT_PASS_REGEX}" "${g_config_file}" | sed 's/.*=[ \t]*//')
+    local pass=$(grep -E "${ROOT_PASS_REGEX}" "${CONFIG_FILE}" | sed 's/.*=[ \t]*//')
     usermod -p "$(openssl passwd -6 "${pass}")" root
 }
 
 setup_users() {
-    local users=$(grep -E "${USER_REGEX}" "${g_config_file}" | sed 's/.*=[ \t]*//')
+    local users=$(grep -E "${USER_REGEX}" "${CONFIG_FILE}" | sed 's/.*=[ \t]*//')
     for user in ${users}; do
         local username="$(echo ${user} | cut -d ':' -f1)"
         local password="$(echo ${user} | grep -o -E ':.*:' | sed 's/^:\(.*\):$/\1/')"
@@ -192,30 +193,14 @@ configure_gnome_keyring() {
 ###############################################################################
 
 if [ -t 1 ]; then
-    print_msg "ERR: Run ./install.sh instead. Check readme for more details.\n"
+    print_msg "ERR: Run ./install.sh instead. Check readme for more details on how to use the installer.\n"
     exit 1
 fi
 
-if [ -z "$(echo ${@} | grep '\-\-config ')" ]; then
-    print_msg "ERR: Run ./install.sh instead. Check readme for more details.\n"
+if [ ! -f "${CONFIG_FILE}" ]; then
+    print_msg "ERR: Missing config file. Check readme for more details on how to use the installer.\n"
     exit 2
 fi
-
-while [ $# -gt 0 ];
-do
-    option=${1}
-    case ${option} in
-        "--config")
-            g_config_file=${2}
-            shift
-            shift
-            ;;
-        *)
-            echo "Unknown option ${option}; ignoring"
-            shift
-            ;;
-    esac
-done
 
 for package in ${PACKAGES}; do
     perform_task_arg install_package ${package} "Installing package ${package} "
