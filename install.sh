@@ -63,7 +63,12 @@ if [ -t 1 ]; then
     exit 0
 fi
 
-[ -z "$(echo ${@} | grep '\-\-config ')" ] && usage && exit 1
+if [ "$(dirname $(realpath ${0}))" != "$(pwd)" ]; then
+    print_msg "ERR: Run the script from within the directory.\n"
+    exit 1
+fi
+
+[ -z "$(echo ${@} | grep '\-\-config ')" ] && usage && exit 2
 
 while [ $# -gt 0 ];
 do
@@ -83,19 +88,19 @@ done
 
 perform_task check_config_file "Checking for valid config file"
 ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Invalid config file. ${GENERIC_ERR}\n" && exit 2
+[ ${ret} != 0 ] && print_msg "ERR: Invalid config file. ${GENERIC_ERR}\n" && exit 3
 
 perform_task check_uefi_boot 'Checking if system is booted in UEFI mode '
 ret=$?
-[ ${ret} != 0 ] && print_msg 'The installer scripts are limited to UEFI systems.\n' && exit 3
+[ ${ret} != 0 ] && print_msg 'The installer scripts are limited to UEFI systems.\n' && exit 4
 
 perform_task check_root 'Checking for root '
 ret=$?
-[ ${ret} != 0 ] && print_msg 'This script needs to be run as root.\n' && exit 4
+[ ${ret} != 0 ] && print_msg 'This script needs to be run as root.\n' && exit 5
 
 perform_task check_conn 'Checking for internet connection '
 ret=$?
-[ ${ret} != 0 ] && print_msg 'Unable to reach the internet. Check your connection.\n' && exit 5
+[ ${ret} != 0 ] && print_msg 'Unable to reach the internet. Check your connection.\n' && exit 6
 
 perform_task update_package_database 'Updating package database '
 perform_task update_system_clock 'Updating system clock '
@@ -103,7 +108,7 @@ perform_task setup_download_mirrors 'Sorting download mirrors (this will take a 
 
 perform_task install_essentials 'Installing essential arch linux packages '
 ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Installing essential packages exit code; ${ret}. ${GENERIC_ERR}\n" && exit 6
+[ ${ret} != 0 ] && print_msg "ERR: Installing essential packages exit code; ${ret}. ${GENERIC_ERR}\n" && exit 7
 
 perform_task generate_fstab 'Generating fstab ' &&
     print_msg '################################################\n' &&
@@ -112,11 +117,11 @@ perform_task generate_fstab 'Generating fstab ' &&
     cat /mnt/etc/fstab >$(tty) &&
     print_msg '################################################\n'
 ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Generating fstab exit code: ${ret}. ${GENERIC_ERR}\n" && exit 7
+[ ${ret} != 0 ] && print_msg "ERR: Generating fstab exit code: ${ret}. ${GENERIC_ERR}\n" && exit 8
 
 perform_task prepare_change_root 'Preparing to chroot into the new system '
 ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Prepare chroot exit code: ${ret}. ${GENERIC_ERR}\n" && exit 8
+[ ${ret} != 0 ] && print_msg "ERR: Prepare chroot exit code: ${ret}. ${GENERIC_ERR}\n" && exit 9
 
 print_msg '################################################\n'
 print_msg '#################### chroot ####################\n'
@@ -124,7 +129,7 @@ print_msg '################################################\n'
 
 arch-chroot /mnt /os-setup/post_chroot.sh
 ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Failed to chroot. ${GENERIC_ERR}\n" && exit 9
+[ ${ret} != 0 ] && print_msg "ERR: Failed to chroot. ${GENERIC_ERR}\n" && exit 10
 
 print_msg '################################################\n'
 

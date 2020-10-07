@@ -88,9 +88,11 @@ setup_users() {
         chown -R "${username}":"${username}" "/home/${username}/Pictures"
         mkdir -p "/home/${username}/Work"
         chown -R "${username}":"${username}" "/home/${username}/Work"
-        cd ./config &&
-            ./update_config --user "${username}" &&
+        cd ./config
+        if [ $? -eq 0 ]; then
+            ./update_config --user "${username}"
             cd ..
+        fi
     done
 }
 
