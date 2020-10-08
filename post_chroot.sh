@@ -74,6 +74,7 @@ setup_root_password() {
 
 setup_users() {
     local users=$(grep -E "${USER_REGEX}" "${CONFIG_FILE}" | sed 's/.*=[ \t]*//')
+    local ret=0
     for user in ${users}; do
         local username="$(echo ${user} | cut -d ':' -f1)"
         local password="$(echo ${user} | grep -o -E ':.*:' | sed 's/^:\(.*\):$/\1/')"
@@ -90,10 +91,12 @@ setup_users() {
         chown -R "${username}":"${username}" "/home/${username}/Work"
         cd ./config
         if [ $? -eq 0 ]; then
-            ./update_config --user "${username}"
+            ./update_config.sh --user "${username}"
+            [ $? -ne 0 ] && ret=1
             cd ..
         fi
     done
+    return ${ret}
 }
 
 pre_install_aur_packages() {

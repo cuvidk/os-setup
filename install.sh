@@ -17,6 +17,19 @@ usage() {
     print_msg "Usage: ${0} --config <filename>\n"
 }
 
+check_root() {
+    test $(id -u) -eq 0
+}
+
+check_conn() {
+    ping -c 4 archlinux.org
+}
+
+check_uefi_boot() {
+    [ -d /sys/firmware/efi/efivars -a `ls /sys/firmware/efi/efivars | wc -l` -gt 0 ]
+}
+
+
 check_config_file() {
     [ -f "${CONFIG_FILE}" ] &&
         [ -n "$(grep -E "${HOSTNAME_REGEX}" "${CONFIG_FILE}")" ] &&
