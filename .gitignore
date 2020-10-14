@@ -1,4 +1,5 @@
 cred.txt
 *.swp
 install.config
+config.template
 *.log
