@@ -1,11 +1,10 @@
 #!/bin/sh
 
-cd /os-setup
-. ./util.sh
+WORKING_DIR="$(realpath "$(dirname "${0}")")"
 
-STDOUT_LOG='stdout.log'
-STDERR_LOG='stderr.log'
-CONFIG_FILE='./install.config'
+. "${WORKING_DIR}/shell-utils/util.sh"
+
+CONFIG_FILE="${WORKING_DIR}/install.config"
 
 PACKAGES="vim
           ranger
@@ -74,7 +73,6 @@ setup_root_password() {
 
 setup_users() {
     local users=$(grep -E "${USER_REGEX}" "${CONFIG_FILE}" | sed 's/.*=[ \t]*//')
-    local ret=0
     for user in ${users}; do
         local username="$(echo ${user} | cut -d ':' -f1)"
         local password="$(echo ${user} | grep -o -E ':.*:' | sed 's/^:\(.*\):$/\1/')"
@@ -89,14 +87,8 @@ setup_users() {
         chown -R "${username}":"${username}" "/home/${username}/Pictures"
         mkdir -p "/home/${username}/Work"
         chown -R "${username}":"${username}" "/home/${username}/Work"
-        cd ./config
-        if [ $? -eq 0 ]; then
-            ./update_config.sh --user "${username}"
-            [ $? -ne 0 ] && ret=1
-            cd ..
-        fi
+        "${WORKING_DIR}/config/update_config.sh" --user "${username}"
     done
-    return ${ret}
 }
 
 pre_install_aur_packages() {
@@ -137,7 +129,7 @@ install_aur_package() {
         su ${AUR_PKG_INSTALL_USER} --command="makepkg -s --noconfirm" &&
         pacman -U --noconfirm *.pkg.tar.*
     local ret=$?
-    cd /os-setup
+    cd "${WORKING_DIR}"
     return ${ret}
 }
 
@@ -240,6 +232,4 @@ perform_task configure_gnome_keyring 'Enabling sensitive information encryption 
 perform_task enable_ucode_updates 'Enabling ucode updates '
 install_grub_bootloader
 
-errors_encountered &&
-    print_msg "ERR: ${0} finished with errors. Check ${STDERR_LOG} / ${STDOUT_LOG} for details.\n" ||
-    print_msg "${0} finished with success.\n"
+check_for_errors

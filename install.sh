@@ -1,16 +1,5 @@
 #!/bin/sh
 
-. ./util.sh
-
-STDOUT_LOG='stdout.log'
-STDERR_LOG='stderr.log'
-CONFIG_FILE='./install.config'
-GENERIC_ERR="Check ${STDERR_LOG} / ${STDOUT_LOG} for more information."
-
-HOSTNAME_REGEX='^hostname[ \t]*=[ \t]*[[:alnum:]]+$'
-ROOT_PASS_REGEX='^root_pass[ \t]*=[ \t]*.+$'
-USER_REGEX='^user[ \t]*=[ \t]*[[:alnum:]]+:.+:[0|1]$'
-
 ################################################################################
 
 usage() {
@@ -62,7 +51,7 @@ generate_fstab() {
 
 prepare_change_root() {
     mkdir -p /mnt/os-setup
-    cp -R . /mnt/os-setup
+    cp -R "${WORKING_DIR}" /mnt/os-setup
 }
 
 clean() {
@@ -71,17 +60,19 @@ clean() {
 
 ################################################################################
 
-if [ -t 1 ]; then
-    "${0}" "${@}" >"${STDOUT_LOG}" 2>${STDERR_LOG}
-    exit 0
-fi
+WORKING_DIR="$(realpath "$(dirname "${0}")")"
 
-if [ "$(dirname $(realpath ${0}))" != "$(pwd)" ]; then
-    print_msg "ERR: Run the script from within the directory.\n"
-    exit 1
-fi
+. "${WORKING_DIR}/shell-utils/util.sh"
 
-[ -z "$(echo ${@} | grep '\-\-config ')" ] && usage && exit 2
+setup_output
+
+CONFIG_FILE='./install.config'
+
+HOSTNAME_REGEX='^hostname[ \t]*=[ \t]*[[:alnum:]]+$'
+ROOT_PASS_REGEX='^root_pass[ \t]*=[ \t]*.+$'
+USER_REGEX='^user[ \t]*=[ \t]*[[:alnum:]]+:.+:[0|1]$'
+
+[ -z "$(echo ${@} | grep '\-\-config ')" ] && usage && exit 1
 
 while [ $# -gt 0 ];
 do
@@ -101,19 +92,19 @@ done
 
 perform_task check_config_file "Checking for valid config file"
 ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Invalid config file. ${GENERIC_ERR}\n" && exit 3
+[ ${ret} != 0 ] && print_msg "ERR: Invalid config file.\n" && exit 2
 
 perform_task check_uefi_boot 'Checking if system is booted in UEFI mode '
 ret=$?
-[ ${ret} != 0 ] && print_msg 'The installer scripts are limited to UEFI systems.\n' && exit 4
+[ ${ret} != 0 ] && print_msg 'The installer scripts are limited to UEFI systems.\n' && exit 3
 
 perform_task check_root 'Checking for root '
 ret=$?
-[ ${ret} != 0 ] && print_msg 'This script needs to be run as root.\n' && exit 5
+[ ${ret} != 0 ] && print_msg 'This script needs to be run as root.\n' && exit 4
 
 perform_task check_conn 'Checking for internet connection '
 ret=$?
-[ ${ret} != 0 ] && print_msg 'Unable to reach the internet. Check your connection.\n' && exit 6
+[ ${ret} != 0 ] && print_msg 'Unable to reach the internet. Check your connection.\n' && exit 5
 
 perform_task update_package_database 'Updating package database '
 perform_task update_system_clock 'Updating system clock '
@@ -121,7 +112,7 @@ perform_task setup_download_mirrors 'Sorting download mirrors (this will take a 
 
 perform_task install_essentials 'Installing essential arch linux packages '
 ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Installing essential packages exit code; ${ret}. ${GENERIC_ERR}\n" && exit 7
+[ ${ret} != 0 ] && print_msg "ERR: Installing essential packages exit code; ${ret}. \n" && exit 6
 
 perform_task generate_fstab 'Generating fstab ' &&
     print_msg '################################################\n' &&
@@ -130,11 +121,11 @@ perform_task generate_fstab 'Generating fstab ' &&
     cat /mnt/etc/fstab >$(tty) &&
     print_msg '################################################\n'
 ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Generating fstab exit code: ${ret}. ${GENERIC_ERR}\n" && exit 8
+[ ${ret} != 0 ] && print_msg "ERR: Generating fstab exit code: ${ret}.\n" && exit 7
 
 perform_task prepare_change_root 'Preparing to chroot into the new system '
 ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Prepare chroot exit code: ${ret}. ${GENERIC_ERR}\n" && exit 9
+[ ${ret} != 0 ] && print_msg "ERR: Prepare chroot exit code: ${ret}.\n" && exit 8
 
 print_msg '################################################\n'
 print_msg '#################### chroot ####################\n'
@@ -142,12 +133,10 @@ print_msg '################################################\n'
 
 arch-chroot /mnt /os-setup/post_chroot.sh
 ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Failed to chroot. ${GENERIC_ERR}\n" && exit 10
+[ ${ret} != 0 ] && print_msg "ERR: Failed to chroot.\n" && exit 9
 
 print_msg '################################################\n'
 
 perform_task clean 'Removing os setup files from the new system '
 
-errors_encountered &&
-    print_msg "ERR: ${0} finished with errors. Check ${STDERR_LOG} / ${STDOUT_LOG} for details.\n" ||
-    print_msg "${0} finished with success.\n"
+check_for_errors
