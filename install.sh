@@ -50,12 +50,11 @@ generate_fstab() {
 }
 
 prepare_change_root() {
-    mkdir -p /mnt/os-setup
-    cp -R "${WORKING_DIR}" /mnt/os-setup
+    cp -R "${WORKING_DIR}" /mnt
 }
 
 clean() {
-    rm -rf /mnt/os-setup
+    rm -rf "/mnt/${WORKING_DIR}"
 }
 
 ################################################################################
