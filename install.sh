@@ -66,7 +66,7 @@ WORKING_DIR="$(realpath "$(dirname "${0}")")"
 
 setup_output
 
-CONFIG_FILE='./install.config'
+CONFIG_FILE="${WORKING_DIR}/install.config"
 
 HOSTNAME_REGEX='^hostname[ \t]*=[ \t]*[[:alnum:]]+$'
 ROOT_PASS_REGEX='^root_pass[ \t]*=[ \t]*.+$'
