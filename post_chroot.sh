@@ -7,6 +7,7 @@ WORKING_DIR="$(realpath "$(dirname "${0}")")"
 CONFIG_FILE="${WORKING_DIR}/install.config"
 
 PACKAGES="vim
+          kitty
           ranger
           man-db
           man-pages
@@ -25,7 +26,6 @@ PACKAGES="vim
           noto-fonts-cjk
           noto-fonts-emoji
           noto-fonts-extra
-          rxvt-unicode
           pulseaudio
           pulseaudio-bluetooth
           alsa-utils
@@ -42,6 +42,7 @@ PACKAGES="vim
           i3-gaps
           i3lock
           i3status
+          picom
           dmenu
           feh
           xss-lock
