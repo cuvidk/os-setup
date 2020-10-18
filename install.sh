@@ -1,6 +1,9 @@
 #!/bin/sh
 
-################################################################################
+WORKING_DIR="$(realpath "$(dirname "${0}")")"
+CONFIG_FILE="${WORKING_DIR}/install.config"
+
+. "${WORKING_DIR}/config/shell-utils/util.sh"
 
 usage() {
     print_msg "Usage: ${0} --config <filename>\n"
@@ -20,10 +23,13 @@ check_uefi_boot() {
 
 
 check_config_file() {
+    local hostname_regex='^hostname[ \t]*=[ \t]*[[:alnum:]]+$'
+    local root_pass_regex='^root_pass[ \t]*=[ \t]*.+$'
+    local user_regex='^user[ \t]*=[ \t]*[[:alnum:]]+:.+:[0|1]$'
     [ -f "${CONFIG_FILE}" ] &&
-        [ -n "$(grep -E "${HOSTNAME_REGEX}" "${CONFIG_FILE}")" ] &&
-        [ -n "$(grep -E "${ROOT_PASS_REGEX}" "${CONFIG_FILE}")" ] &&
-        [ "$(grep -c -E "${USER_REGEX}" "${CONFIG_FILE}")" == "$(grep -c -E '^user' ${CONFIG_FILE})" ]
+        [ -n "$(grep -E "${hostname_regex}" "${CONFIG_FILE}")" ] &&
+        [ -n "$(grep -E "${root_pass_regex}" "${CONFIG_FILE}")" ] &&
+        [ "$(grep -c -E "${user_regex}" "${CONFIG_FILE}")" == "$(grep -c -E '^user' ${CONFIG_FILE})" ]
 }
 
 update_package_database() {
@@ -53,89 +59,87 @@ prepare_change_root() {
     cp -R "${WORKING_DIR}" /mnt
 }
 
-clean() {
-    rm -rf "/mnt/${WORKING_DIR}"
+exec_arch_chroot() {
+    arch-chroot /mnt /os-setup/post_chroot.sh
 }
 
-################################################################################
+clean() {
+    rm -rf "/mnt/$(basename "${WORKING_DIR}")"
+}
 
-WORKING_DIR="$(realpath "$(dirname "${0}")")"
+main() {
+    setup_output
 
-. "${WORKING_DIR}/config/shell-utils/util.sh"
+    [ -z "$(echo ${@} | grep '\-\-config ')" ] && usage && return 1
 
-setup_output
+    while [ $# -gt 0 ];
+    do
+        local option=${1}
+        case ${option} in
+            "--config")
+                cp "${2}" "${CONFIG_FILE}"
+                shift
+                shift
+                ;;
+            *)
+                echo "Unknown option ${option}; ignoring"
+                shift
+                ;;
+        esac
+    done
 
-CONFIG_FILE="${WORKING_DIR}/install.config"
+    perform_task check_config_file "Checking for valid config file"
+    [ $? != 0 ] && print_msg "ERR: Invalid config file.\n" && return 2
 
-HOSTNAME_REGEX='^hostname[ \t]*=[ \t]*[[:alnum:]]+$'
-ROOT_PASS_REGEX='^root_pass[ \t]*=[ \t]*.+$'
-USER_REGEX='^user[ \t]*=[ \t]*[[:alnum:]]+:.+:[0|1]$'
+    perform_task check_uefi_boot 'Checking if system is booted in UEFI mode '
+    [ $? != 0 ] && print_msg 'The installer scripts are limited to UEFI systems.\n' && return 3
 
-[ -z "$(echo ${@} | grep '\-\-config ')" ] && usage && exit 1
+    perform_task check_root 'Checking for root '
+    [ $? != 0 ] && print_msg 'This script needs to be run as root.\n' && return 4
 
-while [ $# -gt 0 ];
-do
-    option=${1}
-    case ${option} in
-        "--config")
-            cp "${2}" "${CONFIG_FILE}"
-            shift
-            shift
-            ;;
-        *)
-            echo "Unknown option ${option}; ignoring"
-            shift
-            ;;
-    esac
-done
+    perform_task check_conn 'Checking for internet connection '
+    [ $? != 0 ] && print_msg 'Unable to reach the internet. Check your connection.\n' && return 5
 
-perform_task check_config_file "Checking for valid config file"
-ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Invalid config file.\n" && exit 2
+    perform_task update_package_database 'Updating package database '
+    perform_task update_system_clock 'Updating system clock '
+    perform_task setup_download_mirrors 'Sorting download mirrors (this will take a while) '
 
-perform_task check_uefi_boot 'Checking if system is booted in UEFI mode '
-ret=$?
-[ ${ret} != 0 ] && print_msg 'The installer scripts are limited to UEFI systems.\n' && exit 3
+    perform_task install_essentials 'Installing essential arch linux packages '
+    local ret=$?
+    [ ${ret} != 0 ] && print_msg "ERR: Installing essential packages exit code; ${ret}. \n" && return 6
 
-perform_task check_root 'Checking for root '
-ret=$?
-[ ${ret} != 0 ] && print_msg 'This script needs to be run as root.\n' && exit 4
+    perform_task generate_fstab 'Generating fstab ' &&
+        print_msg '################################################\n' &&
+        print_msg '################# /mnt/etc/fstab ###############\n' &&
+        print_msg '################################################\n' &&
+        cat /mnt/etc/fstab >$(tty) &&
+        print_msg '################################################\n'
+    ret=$?
+    [ ${ret} != 0 ] && print_msg "ERR: Generating fstab exit code: ${ret}.\n" && return 7
 
-perform_task check_conn 'Checking for internet connection '
-ret=$?
-[ ${ret} != 0 ] && print_msg 'Unable to reach the internet. Check your connection.\n' && exit 5
+    perform_task prepare_change_root 'Preparing to chroot into the new system '
+    ret=$?
+    [ ${ret} != 0 ] && print_msg "ERR: Prepare chroot exit code: ${ret}.\n" && return 8
 
-perform_task update_package_database 'Updating package database '
-perform_task update_system_clock 'Updating system clock '
-perform_task setup_download_mirrors 'Sorting download mirrors (this will take a while) '
-
-perform_task install_essentials 'Installing essential arch linux packages '
-ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Installing essential packages exit code; ${ret}. \n" && exit 6
-
-perform_task generate_fstab 'Generating fstab ' &&
-    print_msg '################################################\n' &&
-    print_msg '################# /mnt/etc/fstab ###############\n' &&
-    print_msg '################################################\n' &&
-    cat /mnt/etc/fstab >$(tty) &&
     print_msg '################################################\n'
-ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Generating fstab exit code: ${ret}.\n" && exit 7
+    print_msg '#################### chroot ####################\n'
+    print_msg '################################################\n'
 
-perform_task prepare_change_root 'Preparing to chroot into the new system '
-ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Prepare chroot exit code: ${ret}.\n" && exit 8
+    perform_task exec_arch_chroot
+    [ ${ret} != 0 ] && print_msg "ERR: arch-chroot returned ${ret}.\n"
 
-print_msg '################################################\n'
-print_msg '#################### chroot ####################\n'
-print_msg '################################################\n'
+    print_msg '################################################\n'
 
-arch-chroot /mnt /os-setup/post_chroot.sh
-ret=$?
-[ ${ret} != 0 ] && print_msg "ERR: Failed to chroot.\n" && exit 9
+    perform_task clean 'Removing os setup files from the new system '
 
-print_msg '################################################\n'
+    check_for_errors
+    if [ $? -eq 1 ]; then
+        print_msg "[ WARNING ]: Errors encountered. Check $(log_file_name) for details.\n"
+        return 9
+    else
+        print_msg "[ SUCCESS ]"
+        return 0
+    fi
+}
 
-perform_task clean 'Removing os setup files from the new system '
-
-check_for_errors
+main "${@}"

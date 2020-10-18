@@ -1,10 +1,9 @@
 #!/bin/sh
 
 WORKING_DIR="$(realpath "$(dirname "${0}")")"
+CONFIG_FILE="${WORKING_DIR}/install.config"
 
 . "${WORKING_DIR}/config/shell-utils/util.sh"
-
-CONFIG_FILE="${WORKING_DIR}/install.config"
 
 PACKAGES="vim
           kitty
@@ -55,14 +54,10 @@ AUR_PACKAGES="google-chrome
               ly-git
              "
 AUR_PKG_INSTALL_USER='aurpkginstalluser'
-HOSTNAME_REGEX='^hostname[ \t]*=[ \t]*[[:alnum:]]+$'
-ROOT_PASS_REGEX='^root_pass[ \t]*=[ \t]*.+$'
-USER_REGEX='^user[ \t]*=[ \t]*[[:alnum:]]+:.+:[0|1]$'
-
-################################################################################
 
 setup_hostname() {
-    local hname=$(grep -E "${HOSTNAME_REGEX}" "${CONFIG_FILE}" | sed 's/.*=[ \t]*//')
+    local hostname_regex='^hostname[ \t]*=[ \t]*[[:alnum:]]+$'
+    local hname=$(grep -E "${hostname_regex}" "${CONFIG_FILE}" | sed 's/.*=[ \t]*//')
     echo "${hname}" > /etc/hostname
     echo '127.0.0.1 localhost' >/etc/hosts
     echo '::1 localhost' >>/etc/hosts
@@ -70,14 +65,16 @@ setup_hostname() {
 }
 
 setup_root_user() {
-    local pass=$(grep -E "${ROOT_PASS_REGEX}" "${CONFIG_FILE}" | sed 's/.*=[ \t]*//')
+    local root_pass_regex='^root_pass[ \t]*=[ \t]*.+$'
+    local pass=$(grep -E "${root_pass_regex}" "${CONFIG_FILE}" | sed 's/.*=[ \t]*//')
     usermod -p "$(openssl passwd -6 "${pass}")" root
     chsh -s /bin/zsh root
     "${WORKING_DIR}/config/update_config.sh" --user root
 }
 
 setup_users() {
-    local users=$(grep -E "${USER_REGEX}" "${CONFIG_FILE}" | sed 's/.*=[ \t]*//')
+    local user_regex='^user[ \t]*=[ \t]*[[:alnum:]]+:.+:[0|1]$'
+    local users=$(grep -E "${user_regex}" "${CONFIG_FILE}" | sed 's/.*=[ \t]*//')
     for user in ${users}; do
         local username="$(echo ${user} | cut -d ':' -f1)"
         local password="$(echo ${user} | grep -o -E ':.*:' | sed 's/^:\(.*\):$/\1/')"
@@ -127,15 +124,20 @@ install_package() {
     pacman -S --noconfirm "${package_name}"
 }
 
+install_ohmyzsh() {
+    "${WORKING_DIR}/config/installers/ohmyzsh.sh" install
+}
+
 install_aur_package() {
     local aur_package_name="$1"
-    git clone "https://aur.archlinux.org/${aur_package_name}.git" &&
+    git clone "https://aur.archlinux.org/${aur_package_name}.git" "${aur_package_name}" &&
         chown -R ${AUR_PKG_INSTALL_USER}:${AUR_PKG_INSTALL_USER} "./${aur_package_name}" &&
         cd "./${aur_package_name}" &&
         su ${AUR_PKG_INSTALL_USER} --command="makepkg -s --noconfirm" &&
         pacman -U --noconfirm *.pkg.tar.*
     local ret=$?
-    cd "${WORKING_DIR}"
+    cd -
+    rm -rf "${aur_package_name}"
     return ${ret}
 }
 
@@ -195,47 +197,50 @@ configure_gnome_keyring() {
     sed -i "${last_session_entry} s/^\(session.*\)/&\nsession\toptional\tpam_gnome_keyring.so auto_start/" /etc/pam.d/login
 }
 
-###############################################################################
+main() {
+    if [ -t 1 ]; then
+        print_msg "ERR: Run ./install.sh instead. Check readme for more details on how to use the installer.\n"
+        return 1
+    fi
 
-if [ -t 1 ]; then
-    print_msg "ERR: Run ./install.sh instead. Check readme for more details on how to use the installer.\n"
-    exit 1
-fi
+    if [ ! -f "${CONFIG_FILE}" ]; then
+        print_msg "ERR: Missing config file. Check readme for more details on how to use the installer.\n"
+        return 2
+    fi
 
-if [ ! -f "${CONFIG_FILE}" ]; then
-    print_msg "ERR: Missing config file. Check readme for more details on how to use the installer.\n"
-    exit 2
-fi
+    for package in ${PACKAGES}; do
+        perform_task_arg install_package ${package} "Installing package ${package} "
+    done
+    perform_task install_ohmyzsh
 
-for package in ${PACKAGES}; do
-    perform_task_arg install_package ${package} "Installing package ${package} "
-done
+    perform_task setup_hostname 'Setting up hostname'
+    perform_task setup_root_user 'Setting up root user'
+    perform_task setup_users 'Setting up users'
 
-perform_task setup_hostname 'Setting up hostname'
-perform_task setup_root_user 'Setting up root user'
-perform_task setup_users 'Setting up users'
+    perform_task setup_timezone 'Setting up timezone '
+    perform_task setup_localization 'Setting up localization '
 
-perform_task setup_timezone 'Setting up timezone '
-perform_task setup_localization 'Setting up localization '
+    perform_task pre_install_aur_packages 'Setting up prerequisites to install AUR packages'
+    for package in ${AUR_PACKAGES}; do
+        perform_task_arg install_aur_package ${package} "Installing AUR package ${package} "
+    done
+    perform_task post_install_aur_packages 'Tearing down prerequisites for AUR packages'
 
-perform_task pre_install_aur_packages 'Setting up prerequisites to install AUR packages'
-for package in ${AUR_PACKAGES}; do
-    perform_task_arg install_aur_package ${package} "Installing AUR package ${package} "
-done
-perform_task post_install_aur_packages 'Tearing down prerequisites for AUR packages'
-
-intel_integrated_graphics && perform_task_arg install_package xf86-video-intel "Installing intel driver for integrated graphics "
-nvidia_dedicated_graphics && perform_task_arg install_package nvidia "Installing nvidia driver for dedicated graphics "
-nvidia_dedicated_graphics && intel_integrated_graphics && perform_task_arg install_package nvidia-prime "Instaling nvidia prime (for optimus technology) "
-amd_dedicated_graphics && install_amd_gpu_drivers
+    intel_integrated_graphics && perform_task_arg install_package xf86-video-intel "Installing intel driver for integrated graphics "
+    nvidia_dedicated_graphics && perform_task_arg install_package nvidia "Installing nvidia driver for dedicated graphics "
+    nvidia_dedicated_graphics && intel_integrated_graphics && perform_task_arg install_package nvidia-prime "Instaling nvidia prime (for optimus technology) "
+    amd_dedicated_graphics && install_amd_gpu_drivers
 
 
-perform_task enable_ly_display_manager 'Enabling Ly display manager '
-perform_task enable_network_manager 'Enabling Network Manager '
-perform_task enable_bluetooth 'Enabling Bluetooth '
-perform_task configure_gnome_keyring 'Enabling sensitive information encryption through gnome keyring '
+    perform_task enable_ly_display_manager 'Enabling Ly display manager '
+    perform_task enable_network_manager 'Enabling Network Manager '
+    perform_task enable_bluetooth 'Enabling Bluetooth '
+    perform_task configure_gnome_keyring 'Enabling sensitive information encryption through gnome keyring '
 
-perform_task enable_ucode_updates 'Enabling ucode updates '
-install_grub_bootloader
+    perform_task enable_ucode_updates 'Enabling ucode updates '
+    install_grub_bootloader
 
-check_for_errors
+    check_for_errors
+}
+
+main "${@}"
