@@ -86,6 +86,19 @@ setup_users() {
             echo "${username} ALL=(ALL) ALL" >>"/etc/sudoers.d/${username}"
         fi
         mkdir -p "/home/${username}/Pictures/wallpapers"
+        cd "/home/${username}/Pictures/wallpapers"
+        wget 'https://unsplash.com/photos/GNQUsuajHFQ/download?force=true&w=1920' -O 1
+        wget 'https://unsplash.com/photos/k6BHLfw_jUg/download?force=true&w=1920' -O 2
+        wget 'https://unsplash.com/photos/KMrYZp6ismc/download?force=true&w=1920' -O 3
+        wget 'https://unsplash.com/photos/gULJzSnDuZU/download?force=true&w=1920' -O 4
+        wget 'https://unsplash.com/photos/EhSxbBCjr9A/download?force=true&w=1920' -O 5
+        wget 'https://unsplash.com/photos/YaVzA1txTRQ/download?force=true&w=1920' -O 6
+        wget 'https://unsplash.com/photos/JwqUV94sK74/download?force=true&w=1920' -O 7
+        wget 'https://unsplash.com/photos/DzqcXxUh61M/download?force=true&w=1920' -O 8
+        wget 'https://unsplash.com/photos/BMO1SzQHWRs/download?force=true&w=1920' -O 9
+        wget 'https://unsplash.com/photos/xJ5HgOc28Os/download?force=true&w=1920' -O 10
+        wget 'https://unsplash.com/photos/Z2s0-zSe3TI/download?force=true&w=1920' -O 11
+        cd -
         chown -R "${username}":"${username}" "/home/${username}/Pictures"
         mkdir -p "/home/${username}/Work"
         chown -R "${username}":"${username}" "/home/${username}/Work"
