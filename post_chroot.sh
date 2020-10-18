@@ -2,7 +2,7 @@
 
 WORKING_DIR="$(realpath "$(dirname "${0}")")"
 
-. "${WORKING_DIR}/shell-utils/util.sh"
+. "${WORKING_DIR}/config/shell-utils/util.sh"
 
 CONFIG_FILE="${WORKING_DIR}/install.config"
 
@@ -47,6 +47,8 @@ PACKAGES="vim
           feh
           xss-lock
           openssl
+          brightnessctl
+          docker
           "
 
 AUR_PACKAGES="google-chrome
@@ -67,9 +69,11 @@ setup_hostname() {
     echo "127.0.1.1 ${hname}.localdomain ${hname}" >>/etc/hosts
 }
 
-setup_root_password() {
+setup_root_user() {
     local pass=$(grep -E "${ROOT_PASS_REGEX}" "${CONFIG_FILE}" | sed 's/.*=[ \t]*//')
     usermod -p "$(openssl passwd -6 "${pass}")" root
+    chsh -s /bin/zsh root
+    "${WORKING_DIR}/config/update_config.sh" --user root
 }
 
 setup_users() {
@@ -88,6 +92,7 @@ setup_users() {
         chown -R "${username}":"${username}" "/home/${username}/Pictures"
         mkdir -p "/home/${username}/Work"
         chown -R "${username}":"${username}" "/home/${username}/Work"
+        chsh -s /bin/zsh "${username}"
         "${WORKING_DIR}/config/update_config.sh" --user "${username}"
     done
 }
@@ -207,7 +212,7 @@ for package in ${PACKAGES}; do
 done
 
 perform_task setup_hostname 'Setting up hostname'
-perform_task setup_root_password 'Setting up root password'
+perform_task setup_root_user 'Setting up root user'
 perform_task setup_users 'Setting up users'
 
 perform_task setup_timezone 'Setting up timezone '

@@ -61,7 +61,7 @@ clean() {
 
 WORKING_DIR="$(realpath "$(dirname "${0}")")"
 
-. "${WORKING_DIR}/shell-utils/util.sh"
+. "${WORKING_DIR}/config/shell-utils/util.sh"
 
 setup_output
 
