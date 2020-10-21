@@ -203,6 +203,10 @@ enable_bluetooth() {
     systemctl enable bluetooth.service
 }
 
+enable_docker() {
+    systemctl enable docker.service
+}
+
 configure_gnome_keyring() {
     local last_auth_entry=$(grep --line-number -E "^auth" /etc/pam.d/login | tail -n 1 | sed 's/\([0-9]\+\):.*/\1/')
     sed -i "${last_auth_entry} s/^\(auth.*\)/&\nauth\toptional\tpam_gnome_keyring.so/" /etc/pam.d/login
@@ -245,9 +249,10 @@ main() {
     amd_dedicated_graphics && install_amd_gpu_drivers
 
 
-    perform_task enable_ly_display_manager 'Enabling Ly display manager '
-    perform_task enable_network_manager 'Enabling Network Manager '
-    perform_task enable_bluetooth 'Enabling Bluetooth '
+    perform_task enable_ly_display_manager 'Enabling Ly display manager'
+    perform_task enable_network_manager 'Enabling Network Manager'
+    perform_task enable_bluetooth 'Enabling Bluetooth'
+    perform_task enable_docker 'Enabling Docker'
     perform_task configure_gnome_keyring 'Enabling sensitive information encryption through gnome keyring '
 
     perform_task enable_ucode_updates 'Enabling ucode updates '
