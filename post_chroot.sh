@@ -85,6 +85,8 @@ setup_users() {
             echo 'Defaults targetpw' >"/etc/sudoers.d/${username}"
             echo "${username} ALL=(ALL) ALL" >>"/etc/sudoers.d/${username}"
         fi
+        # fix this;  docker may have not installed
+        gpasswd -a "${username}" docker
         mkdir -p "/home/${username}/Pictures/wallpapers"
         cd "/home/${username}/Pictures/wallpapers"
         wget 'https://unsplash.com/photos/GNQUsuajHFQ/download?force=true&w=1920' -O 1
