@@ -68,7 +68,7 @@ clean() {
 }
 
 main() {
-    setup_output
+    setup_verbosity "${@}"
 
     [ -z "$(echo ${@} | grep '\-\-config ')" ] && usage && return 1
 
