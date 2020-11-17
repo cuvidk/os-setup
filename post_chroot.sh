@@ -50,7 +50,7 @@ CUSTOM_PACKAGES="vim
                  ssh
                  zsh
                  docker
-                 notification-daemon
+                 notification_daemon
                  "
 
 AUR_PACKAGES="google-chrome
