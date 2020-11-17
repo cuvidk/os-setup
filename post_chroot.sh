@@ -1,13 +1,11 @@
 #!/bin/sh
 
-WORKING_DIR="$(realpath "$(dirname "${0}")")"
-CONFIG_FILE="${WORKING_DIR}/install.config"
+SCRIPT_DIR="$(realpath "$(dirname "${0}")")"
+CONFIG_FILE="${SCRIPT_DIR}/install.config"
 
-. "${WORKING_DIR}/config/shell-utils/util.sh"
+. "${SCRIPT_DIR}/config/shell-utils/util.sh"
 
-PACKAGES="vim
-          kitty
-          ranger
+PACKAGES="ranger
           man-db
           man-pages
           texinfo
@@ -17,7 +15,6 @@ PACKAGES="vim
           ntp
           bluez
           bluez-utils
-          notification-daemon
           gnome-keyring
           seahorse
           ttf-fira-code
@@ -35,41 +32,45 @@ PACKAGES="vim
           os-prober
 	  base-devel
           git
-          zsh
-          xorg-server
-	  xorg-xinit
-          i3-gaps
           i3lock
-          i3status
-          picom
           dmenu
           feh
           xss-lock
           openssl
           brightnessctl
-          docker
           "
 
+CUSTOM_PACKAGES="vim
+                 xorg
+                 i3
+                 i3status
+                 ly
+                 kitty
+                 picom
+                 ssh
+                 zsh
+                 docker
+                 notification-daemon
+                 "
+
 AUR_PACKAGES="google-chrome
-              ly-git
              "
 AUR_PKG_INSTALL_USER='aurpkginstalluser'
 
-setup_hostname() {
+setup_hostname() {(
+    set -e
     local hostname_regex='^hostname[ \t]*=[ \t]*[[:alnum:]]+$'
     local hname=$(grep -E "${hostname_regex}" "${CONFIG_FILE}" | sed 's/.*=[ \t]*//')
     echo "${hname}" > /etc/hostname
     echo '127.0.0.1 localhost' >/etc/hosts
     echo '::1 localhost' >>/etc/hosts
     echo "127.0.1.1 ${hname}.localdomain ${hname}" >>/etc/hosts
-}
+)}
 
 setup_root_user() {
     local root_pass_regex='^root_pass[ \t]*=[ \t]*.+$'
     local pass=$(grep -E "${root_pass_regex}" "${CONFIG_FILE}" | sed 's/.*=[ \t]*//')
     usermod -p "$(openssl passwd -6 "${pass}")" root
-    chsh -s /bin/zsh root
-    "${WORKING_DIR}/config/update_config.sh" --user root
 }
 
 setup_users() {
@@ -85,8 +86,7 @@ setup_users() {
             echo 'Defaults targetpw' >"/etc/sudoers.d/${username}"
             echo "${username} ALL=(ALL) ALL" >>"/etc/sudoers.d/${username}"
         fi
-        # fix this;  docker may have not installed
-        gpasswd -a "${username}" docker
+        
         mkdir -p "/home/${username}/Pictures/wallpapers"
         cd "/home/${username}/Pictures/wallpapers"
         wget 'https://unsplash.com/photos/GNQUsuajHFQ/download?force=true&w=1920' -O 1
@@ -104,8 +104,11 @@ setup_users() {
         chown -R "${username}":"${username}" "/home/${username}/Pictures"
         mkdir -p "/home/${username}/Work"
         chown -R "${username}":"${username}" "/home/${username}/Work"
-        chsh -s /bin/zsh "${username}"
-        "${WORKING_DIR}/config/update_config.sh" --user "${username}"
+
+        for package in ${CUSTOM_PACKAGES}; do
+            install_custom_package_config "${package}" "${username}"
+        done
+        "${SCRIPT_DIR}/config/fix_owner.sh" "${username}"
     done
 }
 
@@ -135,12 +138,19 @@ setup_localization() {
 }
 
 install_package() {
-    local package_name=$1
+    local package_name="${1}"
     pacman -S --noconfirm "${package_name}"
 }
 
-install_ohmyzsh() {
-    "${WORKING_DIR}/config/installers/ohmyzsh.sh" install
+install_custom_package() {
+    local package_name="${1}"
+    "${SCRIPT_DIR}/config/${package_name}/${package_name}.sh" install
+}
+
+install_custom_package_config() {
+    local package_name="${1}"
+    local username="${2}"
+    "${SCRIPT_DIR}/config/${package_name}/${package_name}_config.sh" install --for-user "${username}"
 }
 
 install_aur_package() {
@@ -192,21 +202,12 @@ install_grub_bootloader() {
         print_msg '-------------FAILED-------------\n'
 }
 
-enable_ly_display_manager() {
-    systemctl disable getty@tty2.service
-    systemctl enable ly.service
-}
-
 enable_network_manager() {
     systemctl enable NetworkManager.service
 }
 
 enable_bluetooth() {
     systemctl enable bluetooth.service
-}
-
-enable_docker() {
-    systemctl enable docker.service
 }
 
 configure_gnome_keyring() {
@@ -228,9 +229,12 @@ main() {
     fi
 
     for package in ${PACKAGES}; do
-        perform_task_arg install_package ${package} "Installing package ${package} "
+        perform_task_arg install_package "${package}" "Installing package ${package}"
     done
-    perform_task install_ohmyzsh
+
+    for package in ${CUSTOM_PACKAGES}; do
+        perform_task_arg install_custom_package "${package}"
+    done
 
     perform_task setup_hostname 'Setting up hostname'
     perform_task setup_root_user 'Setting up root user'
@@ -251,10 +255,8 @@ main() {
     amd_dedicated_graphics && install_amd_gpu_drivers
 
 
-    perform_task enable_ly_display_manager 'Enabling Ly display manager'
     perform_task enable_network_manager 'Enabling Network Manager'
     perform_task enable_bluetooth 'Enabling Bluetooth'
-    perform_task enable_docker 'Enabling Docker'
     perform_task configure_gnome_keyring 'Enabling sensitive information encryption through gnome keyring '
 
     perform_task enable_ucode_updates 'Enabling ucode updates '
