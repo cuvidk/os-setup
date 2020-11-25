@@ -144,13 +144,13 @@ install_package() {
 
 install_custom_package() {
     local package_name="${1}"
-    "${SCRIPT_DIR}/config/${package_name}/${package_name}.sh" install
+    "${SCRIPT_DIR}/config/make.sh" install "${package_name}"
 }
 
 install_custom_package_config() {
     local package_name="${1}"
     local username="${2}"
-    "${SCRIPT_DIR}/config/${package_name}/${package_name}_config.sh" install --for-user "${username}"
+    "${SCRIPT_DIR}/config/make_config.sh" install "${package_name}" "${username}"
 }
 
 install_aur_package() {
