@@ -26,7 +26,7 @@ jobs:
       # Runs a single command using the runners shell
       - name: Explore
         run: |
-          git submodule update --init --recursive
+          git submodule update --init --recursive --remote
           ls -l
           echo "-----------"
           ls -l "${GITHUB_WORKSPACE}/config"
