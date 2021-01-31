@@ -1,13 +1,9 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Update Refs
+name: Update config-files ref
 
 # Controls when the action will run. 
 on:
-# Triggers the workflow on push or pull request events but only for the master branch
-  schedule:
-    - cron: '*/120 * * * *'
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -26,10 +22,10 @@ jobs:
       - name: Pull config-files submodule
         run: |
           git submodule update --init --recursive
-          cd "${GITHUB_WORKSPACE}/config"
+          cd "${GITHUB_WORKSPACE}/config-files"
           git checkout main
           
-      - name: Setup user
+      - name: Setup git user
         env:
           USERNAME: "${{ secrets.USERNAME }}"
           EMAIL: "${{ secrets.EMAIL }}"
@@ -39,5 +35,5 @@ jobs:
           
       - name: Update config-files ref
         run: |
-          git add "${GITHUB_WORKSPACE}/config"
-          (git commit -m "Updated config-files-ref" && git push) || echo "Nothing to do."
+          git add "${GITHUB_WORKSPACE}/config-files"
+          git commit -m "Updated config-files-ref $(date +%s)" && git push
