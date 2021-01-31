@@ -1,12 +1,12 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: Update Refs
 
 # Controls when the action will run. 
 on:
 # Triggers the workflow on push or pull request events but only for the master branch
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '*/120 * * * *'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -23,16 +23,13 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Update submodules
+      - name: Pull config-files submodule
         run: |
           git submodule update --init --recursive
           cd "${GITHUB_WORKSPACE}/config"
           git checkout main
-          echo "-----------"
-          git branch
-          echo "-----------"
-          ls -la .
             
-      - name: Explore
+      - name: Update config-files ref
         run: |
-          ls -la .
+          git add "${GITHUB_WORKSPACE}/config"
+          (git commit -m "Updated config-files-ref" && git push) || echo "Nothing to do."
