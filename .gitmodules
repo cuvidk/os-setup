@@ -1,5 +1,5 @@
 [submodule "config"]
-	path = config
+	path = config-files
 	url = https://github.com/cuvidk/config-files
 [submodule "shell-utils"]
 	path = shell-utils
