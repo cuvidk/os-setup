@@ -28,7 +28,15 @@ jobs:
           git submodule update --init --recursive
           cd "${GITHUB_WORKSPACE}/config"
           git checkout main
-            
+          
+      - name: Setup user
+        env:
+          USERNAME: "${{ secrets.USERNAME }}"
+          EMAIL: "${{ secrets.EMAIL }}"
+        run: |
+          git config --global user.name "${USERNAME}"
+          git config --global user.email "${EMAIL}"
+          
       - name: Update config-files ref
         run: |
           git add "${GITHUB_WORKSPACE}/config"
