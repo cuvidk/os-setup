@@ -6,7 +6,6 @@ CONFIG_FILE="${SCRIPT_DIR}/install.config"
 . "${SCRIPT_DIR}/config/shell-utils/util.sh"
 
 PACKAGES="ranger
-		  inkscape
           man-db
           man-pages
           texinfo
