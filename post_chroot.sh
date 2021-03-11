@@ -6,6 +6,7 @@ CONFIG_FILE="${SCRIPT_DIR}/install.config"
 . "${SCRIPT_DIR}/config/shell-utils/util.sh"
 
 PACKAGES="ranger
+		  inkscape
           man-db
           man-pages
           texinfo
@@ -30,7 +31,7 @@ PACKAGES="ranger
           grub
           efibootmgr
           os-prober
-	  base-devel
+		  base-devel
           git
           i3lock
           dmenu
